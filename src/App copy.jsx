@@ -1,871 +1,225 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-
-const ELEMENTS = [
-  { number: 1, symbol: "H", name: "Hydrogen", mass: 1.008, group: 1, period: 1, category: "nonmetal", electronegativity: 2.20, radius: 53, meltingPoint: -259.16, boilingPoint: -252.88, density: 0.00009, oxidationStates: "+1, -1", electronConfig: "1s¹", discovered: 1766, discoveredBy: "Henry Cavendish", phase: "Gas", ionizationEnergy: 13.598, electronAffinity: 0.754, valence: 1, abundance: "0.15%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "hexagonal", protons: 1, neutrons: 0, electrons: 1, shells: [1], xpos: 1, ypos: 1, description: "The lightest and most abundant element in the universe, forming stars and water." },
-  { number: 2, symbol: "He", name: "Helium", mass: 4.003, group: 18, period: 1, category: "noble gas", electronegativity: null, radius: 31, meltingPoint: -272.2, boilingPoint: -268.93, density: 0.000179, oxidationStates: "0", electronConfig: "1s²", discovered: 1868, discoveredBy: "Pierre Janssen", phase: "Gas", ionizationEnergy: 24.587, electronAffinity: 0, valence: 0, abundance: "24%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "hexagonal", protons: 2, neutrons: 2, electrons: 2, shells: [2], xpos: 18, ypos: 1, description: "Second most abundant element in the universe. Used in balloons and MRI machines." },
-  { number: 3, symbol: "Li", name: "Lithium", mass: 6.941, group: 1, period: 2, category: "alkali metal", electronegativity: 0.98, radius: 167, meltingPoint: 180.54, boilingPoint: 1342, density: 0.534, oxidationStates: "+1", electronConfig: "[He] 2s¹", discovered: 1817, discoveredBy: "Johan August Arfwedson", phase: "Solid", ionizationEnergy: 5.392, electronAffinity: 0.618, valence: 1, abundance: "0.002%", hardness: 0.6, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 3, neutrons: 4, electrons: 3, shells: [2, 1], xpos: 1, ypos: 2, description: "Lightest metal, crucial for lithium-ion batteries and psychiatric medication." },
-  { number: 4, symbol: "Be", name: "Beryllium", mass: 9.012, group: 2, period: 2, category: "alkaline earth metal", electronegativity: 1.57, radius: 112, meltingPoint: 1287, boilingPoint: 2469, density: 1.85, oxidationStates: "+2", electronConfig: "[He] 2s²", discovered: 1798, discoveredBy: "Louis Nicolas Vauquelin", phase: "Solid", ionizationEnergy: 9.323, electronAffinity: 0, valence: 2, abundance: "0.00019%", hardness: 5.5, conductivity: "good", magnetism: "diamagnetic", crystalStructure: "hcp", protons: 4, neutrons: 5, electrons: 4, shells: [2, 2], xpos: 2, ypos: 2, description: "Lightweight, stiff metal used in aerospace and X-ray windows. Highly toxic." },
-  { number: 5, symbol: "B", name: "Boron", mass: 10.81, group: 13, period: 2, category: "metalloid", electronegativity: 2.04, radius: 87, meltingPoint: 2075, boilingPoint: 4000, density: 2.34, oxidationStates: "+3", electronConfig: "[He] 2s² 2p¹", discovered: 1808, discoveredBy: "Humphry Davy", phase: "Solid", ionizationEnergy: 8.298, electronAffinity: 0.277, valence: 3, abundance: "0.00086%", hardness: 9.3, conductivity: "semiconductor", magnetism: "diamagnetic", crystalStructure: "rhombohedral", protons: 5, neutrons: 6, electrons: 5, shells: [2, 3], xpos: 13, ypos: 2, description: "Hard metalloid used in glass, ceramics, and as a semiconductor dopant." },
-  { number: 6, symbol: "C", name: "Carbon", mass: 12.011, group: 14, period: 2, category: "nonmetal", electronegativity: 2.55, radius: 67, meltingPoint: 3550, boilingPoint: 4027, density: 2.267, oxidationStates: "+4, +2, -4", electronConfig: "[He] 2s² 2p²", discovered: -3750, discoveredBy: "Ancient peoples", phase: "Solid", ionizationEnergy: 11.26, electronAffinity: 1.263, valence: 4, abundance: "0.18%", hardness: 10, conductivity: "varies", magnetism: "diamagnetic", crystalStructure: "diamond cubic", protons: 6, neutrons: 6, electrons: 6, shells: [2, 4], xpos: 14, ypos: 2, description: "Basis of all known life, exists as diamond and graphite. Essential for organic chemistry." },
-  { number: 7, symbol: "N", name: "Nitrogen", mass: 14.007, group: 15, period: 2, category: "nonmetal", electronegativity: 3.04, radius: 56, meltingPoint: -210.0, boilingPoint: -195.79, density: 0.00125, oxidationStates: "+5,+4,+3,+2,-3", electronConfig: "[He] 2s² 2p³", discovered: 1772, discoveredBy: "Daniel Rutherford", phase: "Gas", ionizationEnergy: 14.534, electronAffinity: 0, valence: 3, abundance: "78%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "hexagonal", protons: 7, neutrons: 7, electrons: 7, shells: [2, 5], xpos: 15, ypos: 2, description: "Makes up 78% of Earth's atmosphere. Essential for proteins, DNA, and fertilizers." },
-  { number: 8, symbol: "O", name: "Oxygen", mass: 15.999, group: 16, period: 2, category: "nonmetal", electronegativity: 3.44, radius: 48, meltingPoint: -218.79, boilingPoint: -182.96, density: 0.00143, oxidationStates: "-2, -1", electronConfig: "[He] 2s² 2p⁴", discovered: 1774, discoveredBy: "Carl Wilhelm Scheele", phase: "Gas", ionizationEnergy: 13.618, electronAffinity: 1.461, valence: 2, abundance: "21%", hardness: null, conductivity: "poor", magnetism: "paramagnetic", crystalStructure: "cubic", protons: 8, neutrons: 8, electrons: 8, shells: [2, 6], xpos: 16, ypos: 2, description: "Essential for respiration. Makes up 21% of atmosphere and 65% of the human body." },
-  { number: 9, symbol: "F", name: "Fluorine", mass: 18.998, group: 17, period: 2, category: "halogen", electronegativity: 3.98, radius: 42, meltingPoint: -219.67, boilingPoint: -188.12, density: 0.0017, oxidationStates: "-1", electronConfig: "[He] 2s² 2p⁵", discovered: 1886, discoveredBy: "Henri Moissan", phase: "Gas", ionizationEnergy: 17.423, electronAffinity: 3.401, valence: 1, abundance: "0.054%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "cubic", protons: 9, neutrons: 10, electrons: 9, shells: [2, 7], xpos: 17, ypos: 2, description: "Most electronegative element, extremely reactive. Used in toothpaste and Teflon." },
-  { number: 10, symbol: "Ne", name: "Neon", mass: 20.18, group: 18, period: 2, category: "noble gas", electronegativity: null, radius: 38, meltingPoint: -248.59, boilingPoint: -246.05, density: 0.0009, oxidationStates: "0", electronConfig: "[He] 2s² 2p⁶", discovered: 1898, discoveredBy: "William Ramsay", phase: "Gas", ionizationEnergy: 21.565, electronAffinity: 0, valence: 0, abundance: "0.0018%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 10, neutrons: 10, electrons: 10, shells: [2, 8], xpos: 18, ypos: 2, description: "Noble gas famous for its brilliant orange-red glow in neon signs." },
-  { number: 11, symbol: "Na", name: "Sodium", mass: 22.99, group: 1, period: 3, category: "alkali metal", electronegativity: 0.93, radius: 190, meltingPoint: 97.79, boilingPoint: 882.8, density: 0.968, oxidationStates: "+1", electronConfig: "[Ne] 3s¹", discovered: 1807, discoveredBy: "Humphry Davy", phase: "Solid", ionizationEnergy: 5.139, electronAffinity: 0.548, valence: 1, abundance: "2.36%", hardness: 0.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 11, neutrons: 12, electrons: 11, shells: [2, 8, 1], xpos: 1, ypos: 3, description: "Soft, reactive metal. Component of table salt (NaCl) and essential for nerve function." },
-  { number: 12, symbol: "Mg", name: "Magnesium", mass: 24.305, group: 2, period: 3, category: "alkaline earth metal", electronegativity: 1.31, radius: 160, meltingPoint: 650, boilingPoint: 1090, density: 1.738, oxidationStates: "+2", electronConfig: "[Ne] 3s²", discovered: 1755, discoveredBy: "Joseph Black", phase: "Solid", ionizationEnergy: 7.646, electronAffinity: 0, valence: 2, abundance: "2.33%", hardness: 2.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 12, neutrons: 12, electrons: 12, shells: [2, 8, 2], xpos: 2, ypos: 3, description: "Light structural metal essential for chlorophyll and hundreds of enzymes in the body." },
-  { number: 13, symbol: "Al", name: "Aluminium", mass: 26.982, group: 13, period: 3, category: "post-transition metal", electronegativity: 1.61, radius: 143, meltingPoint: 660.32, boilingPoint: 2519, density: 2.698, oxidationStates: "+3", electronConfig: "[Ne] 3s² 3p¹", discovered: 1825, discoveredBy: "Hans Christian Ørsted", phase: "Solid", ionizationEnergy: 5.986, electronAffinity: 0.441, valence: 3, abundance: "8.23%", hardness: 2.75, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "fcc", protons: 13, neutrons: 14, electrons: 13, shells: [2, 8, 3], xpos: 13, ypos: 3, description: "Third most abundant element, lightweight and corrosion-resistant. Widely used in packaging and transport." },
-  { number: 14, symbol: "Si", name: "Silicon", mass: 28.085, group: 14, period: 3, category: "metalloid", electronegativity: 1.90, radius: 111, meltingPoint: 1414, boilingPoint: 3265, density: 2.329, oxidationStates: "+4, +2, -4", electronConfig: "[Ne] 3s² 3p²", discovered: 1824, discoveredBy: "Jöns Jacob Berzelius", phase: "Solid", ionizationEnergy: 8.152, electronAffinity: 1.385, valence: 4, abundance: "28.2%", hardness: 6.5, conductivity: "semiconductor", magnetism: "diamagnetic", crystalStructure: "diamond cubic", protons: 14, neutrons: 14, electrons: 14, shells: [2, 8, 4], xpos: 14, ypos: 3, description: "Basis of modern electronics and computer chips. Second most abundant element in Earth's crust." },
-  { number: 15, symbol: "P", name: "Phosphorus", mass: 30.974, group: 15, period: 3, category: "nonmetal", electronegativity: 2.19, radius: 98, meltingPoint: 44.15, boilingPoint: 280.5, density: 1.82, oxidationStates: "+5, +3, -3", electronConfig: "[Ne] 3s² 3p³", discovered: 1669, discoveredBy: "Hennig Brand", phase: "Solid", ionizationEnergy: 10.487, electronAffinity: 0.747, valence: 3, abundance: "0.099%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "cubic", protons: 15, neutrons: 16, electrons: 15, shells: [2, 8, 5], xpos: 15, ypos: 3, description: "Essential for DNA, RNA, and ATP. Found in bones and teeth. Used in fertilizers." },
-  { number: 16, symbol: "S", name: "Sulfur", mass: 32.06, group: 16, period: 3, category: "nonmetal", electronegativity: 2.58, radius: 88, meltingPoint: 115.21, boilingPoint: 444.72, density: 2.067, oxidationStates: "+6, +4, -2", electronConfig: "[Ne] 3s² 3p⁴", discovered: -2000, discoveredBy: "Ancient peoples", phase: "Solid", ionizationEnergy: 10.36, electronAffinity: 2.077, valence: 2, abundance: "0.042%", hardness: 2.0, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "orthorhombic", protons: 16, neutrons: 16, electrons: 16, shells: [2, 8, 6], xpos: 16, ypos: 3, description: "Yellow nonmetal essential for proteins. Used in gunpowder, rubber vulcanization, and fertilizers." },
-  { number: 17, symbol: "Cl", name: "Chlorine", mass: 35.45, group: 17, period: 3, category: "halogen", electronegativity: 3.16, radius: 79, meltingPoint: -101.5, boilingPoint: -34.04, density: 0.00321, oxidationStates: "+7,+5,+3,+1,-1", electronConfig: "[Ne] 3s² 3p⁵", discovered: 1774, discoveredBy: "Carl Wilhelm Scheele", phase: "Gas", ionizationEnergy: 12.968, electronAffinity: 3.613, valence: 1, abundance: "0.017%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "orthorhombic", protons: 17, neutrons: 18, electrons: 17, shells: [2, 8, 7], xpos: 17, ypos: 3, description: "Toxic yellow-green gas used to disinfect water and produce PVC and bleach." },
-  { number: 18, symbol: "Ar", name: "Argon", mass: 39.948, group: 18, period: 3, category: "noble gas", electronegativity: null, radius: 71, meltingPoint: -189.36, boilingPoint: -185.85, density: 0.00178, oxidationStates: "0", electronConfig: "[Ne] 3s² 3p⁶", discovered: 1894, discoveredBy: "Lord Rayleigh", phase: "Gas", ionizationEnergy: 15.76, electronAffinity: 0, valence: 0, abundance: "0.93%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 18, neutrons: 22, electrons: 18, shells: [2, 8, 8], xpos: 18, ypos: 3, description: "Third most abundant gas in air. Used in light bulbs, welding, and as an inert shield." },
-  { number: 19, symbol: "K", name: "Potassium", mass: 39.098, group: 1, period: 4, category: "alkali metal", electronegativity: 0.82, radius: 243, meltingPoint: 63.38, boilingPoint: 759, density: 0.862, oxidationStates: "+1", electronConfig: "[Ar] 4s¹", discovered: 1807, discoveredBy: "Humphry Davy", phase: "Solid", ionizationEnergy: 4.341, electronAffinity: 0.501, valence: 1, abundance: "2.09%", hardness: 0.4, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 19, neutrons: 20, electrons: 19, shells: [2, 8, 8, 1], xpos: 1, ypos: 4, description: "Essential electrolyte for nerve and muscle function. Vital for plant growth and nutrition." },
-  { number: 20, symbol: "Ca", name: "Calcium", mass: 40.078, group: 2, period: 4, category: "alkaline earth metal", electronegativity: 1.00, radius: 194, meltingPoint: 842, boilingPoint: 1484, density: 1.55, oxidationStates: "+2", electronConfig: "[Ar] 4s²", discovered: 1808, discoveredBy: "Humphry Davy", phase: "Solid", ionizationEnergy: 6.113, electronAffinity: 0.018, valence: 2, abundance: "4.15%", hardness: 1.75, conductivity: "good", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 20, neutrons: 20, electrons: 20, shells: [2, 8, 8, 2], xpos: 2, ypos: 4, description: "Essential for bones, teeth, and muscle function. Most abundant metal in the human body." },
-  { number: 21, symbol: "Sc", name: "Scandium", mass: 44.956, group: 3, period: 4, category: "transition metal", electronegativity: 1.36, radius: 184, meltingPoint: 1541, boilingPoint: 2830, density: 2.985, oxidationStates: "+3", electronConfig: "[Ar] 3d¹ 4s²", discovered: 1879, discoveredBy: "Lars Fredrik Nilson", phase: "Solid", ionizationEnergy: 6.561, electronAffinity: 0.188, valence: 3, abundance: "0.0022%", hardness: null, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 21, neutrons: 24, electrons: 21, shells: [2, 8, 9, 2], xpos: 3, ypos: 4, description: "Rare lightweight metal used in aerospace alloys and sports equipment." },
-  { number: 22, symbol: "Ti", name: "Titanium", mass: 47.867, group: 4, period: 4, category: "transition metal", electronegativity: 1.54, radius: 176, meltingPoint: 1668, boilingPoint: 3287, density: 4.507, oxidationStates: "+4, +3, +2", electronConfig: "[Ar] 3d² 4s²", discovered: 1791, discoveredBy: "William Gregor", phase: "Solid", ionizationEnergy: 6.828, electronAffinity: 0.079, valence: 4, abundance: "0.565%", hardness: 6.0, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 22, neutrons: 26, electrons: 22, shells: [2, 8, 10, 2], xpos: 4, ypos: 4, description: "Lightweight, strong metal with excellent corrosion resistance. Used in implants and aerospace." },
-  { number: 23, symbol: "V", name: "Vanadium", mass: 50.942, group: 5, period: 4, category: "transition metal", electronegativity: 1.63, radius: 171, meltingPoint: 1910, boilingPoint: 3407, density: 6.11, oxidationStates: "+5,+4,+3,+2", electronConfig: "[Ar] 3d³ 4s²", discovered: 1801, discoveredBy: "Andrés Manuel del Río", phase: "Solid", ionizationEnergy: 6.746, electronAffinity: 0.525, valence: 5, abundance: "0.019%", hardness: 7.0, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 23, neutrons: 28, electrons: 23, shells: [2, 8, 11, 2], xpos: 5, ypos: 4, description: "Hard metal used in steel alloys and as a catalyst. Found in some crude oils." },
-  { number: 24, symbol: "Cr", name: "Chromium", mass: 51.996, group: 6, period: 4, category: "transition metal", electronegativity: 1.66, radius: 166, meltingPoint: 1907, boilingPoint: 2671, density: 7.15, oxidationStates: "+6,+3,+2", electronConfig: "[Ar] 3d⁵ 4s¹", discovered: 1798, discoveredBy: "Louis Nicolas Vauquelin", phase: "Solid", ionizationEnergy: 6.767, electronAffinity: 0.666, valence: 3, abundance: "0.014%", hardness: 8.5, conductivity: "good", magnetism: "antiferromagnetic", crystalStructure: "bcc", protons: 24, neutrons: 28, electrons: 24, shells: [2, 8, 13, 1], xpos: 6, ypos: 4, description: "Lustrous, hard metal used to make stainless steel and chrome plating." },
-  { number: 25, symbol: "Mn", name: "Manganese", mass: 54.938, group: 7, period: 4, category: "transition metal", electronegativity: 1.55, radius: 161, meltingPoint: 1246, boilingPoint: 2061, density: 7.44, oxidationStates: "+7,+4,+3,+2", electronConfig: "[Ar] 3d⁵ 4s²", discovered: 1774, discoveredBy: "Carl Wilhelm Scheele", phase: "Solid", ionizationEnergy: 7.434, electronAffinity: 0, valence: 2, abundance: "0.11%", hardness: 6.0, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "cubic", protons: 25, neutrons: 30, electrons: 25, shells: [2, 8, 13, 2], xpos: 7, ypos: 4, description: "Essential trace element. Used in steel production and dry cell batteries." },
-  { number: 26, symbol: "Fe", name: "Iron", mass: 55.845, group: 8, period: 4, category: "transition metal", electronegativity: 1.83, radius: 126, meltingPoint: 1538, boilingPoint: 2861, density: 7.874, oxidationStates: "+3, +2", electronConfig: "[Ar] 3d⁶ 4s²", discovered: -3000, discoveredBy: "Ancient peoples", phase: "Solid", ionizationEnergy: 7.902, electronAffinity: 0.151, valence: 2, abundance: "5.63%", hardness: 4.0, conductivity: "good", magnetism: "ferromagnetic", crystalStructure: "bcc", protons: 26, neutrons: 30, electrons: 26, shells: [2, 8, 14, 2], xpos: 8, ypos: 4, description: "Most used metal on Earth. Essential component of hemoglobin and steel." },
-  { number: 27, symbol: "Co", name: "Cobalt", mass: 58.933, group: 9, period: 4, category: "transition metal", electronegativity: 1.88, radius: 125, meltingPoint: 1495, boilingPoint: 2927, density: 8.9, oxidationStates: "+3, +2", electronConfig: "[Ar] 3d⁷ 4s²", discovered: 1735, discoveredBy: "Georg Brandt", phase: "Solid", ionizationEnergy: 7.881, electronAffinity: 0.662, valence: 3, abundance: "0.003%", hardness: 5.0, conductivity: "good", magnetism: "ferromagnetic", crystalStructure: "hcp", protons: 27, neutrons: 32, electrons: 27, shells: [2, 8, 15, 2], xpos: 9, ypos: 4, description: "Blue pigment metal used in magnets, lithium batteries, and vitamin B12." },
-  { number: 28, symbol: "Ni", name: "Nickel", mass: 58.693, group: 10, period: 4, category: "transition metal", electronegativity: 1.91, radius: 124, meltingPoint: 1455, boilingPoint: 2913, density: 8.908, oxidationStates: "+3, +2", electronConfig: "[Ar] 3d⁸ 4s²", discovered: 1751, discoveredBy: "Axel Fredrik Cronstedt", phase: "Solid", ionizationEnergy: 7.64, electronAffinity: 1.156, valence: 2, abundance: "0.0089%", hardness: 4.0, conductivity: "good", magnetism: "ferromagnetic", crystalStructure: "fcc", protons: 28, neutrons: 31, electrons: 28, shells: [2, 8, 16, 2], xpos: 10, ypos: 4, description: "Corrosion-resistant metal. Used in coins, stainless steel, and rechargeable batteries." },
-  { number: 29, symbol: "Cu", name: "Copper", mass: 63.546, group: 11, period: 4, category: "transition metal", electronegativity: 1.90, radius: 128, meltingPoint: 1084.62, boilingPoint: 2927, density: 8.96, oxidationStates: "+2, +1", electronConfig: "[Ar] 3d¹⁰ 4s¹", discovered: -9000, discoveredBy: "Ancient peoples", phase: "Solid", ionizationEnergy: 7.727, electronAffinity: 1.235, valence: 2, abundance: "0.0068%", hardness: 3.0, conductivity: "excellent", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 29, neutrons: 35, electrons: 29, shells: [2, 8, 18, 1], xpos: 11, ypos: 4, description: "Excellent electrical and thermal conductor. Used in wiring, plumbing, and as essential nutrient." },
-  { number: 30, symbol: "Zn", name: "Zinc", mass: 65.38, group: 12, period: 4, category: "transition metal", electronegativity: 1.65, radius: 122, meltingPoint: 419.53, boilingPoint: 907, density: 7.133, oxidationStates: "+2", electronConfig: "[Ar] 3d¹⁰ 4s²", discovered: 1746, discoveredBy: "Andreas Marggraf", phase: "Solid", ionizationEnergy: 9.394, electronAffinity: 0, valence: 2, abundance: "0.0079%", hardness: 2.5, conductivity: "good", magnetism: "diamagnetic", crystalStructure: "hcp", protons: 30, neutrons: 35, electrons: 30, shells: [2, 8, 18, 2], xpos: 12, ypos: 4, description: "Used to galvanize steel. Essential for immune function, wound healing, and enzyme activity." },
-  { number: 31, symbol: "Ga", name: "Gallium", mass: 69.723, group: 13, period: 4, category: "post-transition metal", electronegativity: 1.81, radius: 136, meltingPoint: 29.76, boilingPoint: 2204, density: 5.91, oxidationStates: "+3", electronConfig: "[Ar] 3d¹⁰ 4s² 4p¹", discovered: 1875, discoveredBy: "Paul Emile Lecoq de Boisbaudran", phase: "Solid", ionizationEnergy: 5.999, electronAffinity: 0.41, valence: 3, abundance: "0.0019%", hardness: 1.5, conductivity: "moderate", magnetism: "diamagnetic", crystalStructure: "orthorhombic", protons: 31, neutrons: 39, electrons: 31, shells: [2, 8, 18, 3], xpos: 13, ypos: 4, description: "Melts in your hand at 30°C. Used in LEDs, semiconductors, and solar panels." },
-  { number: 32, symbol: "Ge", name: "Germanium", mass: 72.63, group: 14, period: 4, category: "metalloid", electronegativity: 2.01, radius: 125, meltingPoint: 938.25, boilingPoint: 2833, density: 5.323, oxidationStates: "+4, +2", electronConfig: "[Ar] 3d¹⁰ 4s² 4p²", discovered: 1886, discoveredBy: "Clemens Winkler", phase: "Solid", ionizationEnergy: 7.9, electronAffinity: 1.233, valence: 4, abundance: "0.00014%", hardness: 6.0, conductivity: "semiconductor", magnetism: "diamagnetic", crystalStructure: "diamond cubic", protons: 32, neutrons: 41, electrons: 32, shells: [2, 8, 18, 4], xpos: 14, ypos: 4, description: "Semiconductor predicted by Mendeleev. Used in fiber optics, infrared optics, and transistors." },
-  { number: 33, symbol: "As", name: "Arsenic", mass: 74.922, group: 15, period: 4, category: "metalloid", electronegativity: 2.18, radius: 114, meltingPoint: 816.9, boilingPoint: 614, density: 5.727, oxidationStates: "+5,+3,-3", electronConfig: "[Ar] 3d¹⁰ 4s² 4p³", discovered: 1250, discoveredBy: "Albertus Magnus", phase: "Solid", ionizationEnergy: 9.815, electronAffinity: 0.814, valence: 3, abundance: "0.00018%", hardness: 3.5, conductivity: "semiconductor", magnetism: "diamagnetic", crystalStructure: "rhombohedral", protons: 33, neutrons: 42, electrons: 33, shells: [2, 8, 18, 5], xpos: 15, ypos: 4, description: "Toxic metalloid historically used as poison. Now used in semiconductors and wood preservatives." },
-  { number: 34, symbol: "Se", name: "Selenium", mass: 78.971, group: 16, period: 4, category: "nonmetal", electronegativity: 2.55, radius: 103, meltingPoint: 221, boilingPoint: 685, density: 4.819, oxidationStates: "+6,+4,-2", electronConfig: "[Ar] 3d¹⁰ 4s² 4p⁴", discovered: 1817, discoveredBy: "Jöns Jacob Berzelius", phase: "Solid", ionizationEnergy: 9.752, electronAffinity: 2.021, valence: 2, abundance: "0.0000005%", hardness: 2.0, conductivity: "semiconductor", magnetism: "diamagnetic", crystalStructure: "hexagonal", protons: 34, neutrons: 45, electrons: 34, shells: [2, 8, 18, 6], xpos: 16, ypos: 4, description: "Photoconductive nonmetal. Used in solar cells, glass-making, and dietary supplements." },
-  { number: 35, symbol: "Br", name: "Bromine", mass: 79.904, group: 17, period: 4, category: "halogen", electronegativity: 2.96, radius: 94, meltingPoint: -7.3, boilingPoint: 58.8, density: 3.102, oxidationStates: "+5,+1,-1", electronConfig: "[Ar] 3d¹⁰ 4s² 4p⁵", discovered: 1826, discoveredBy: "Antoine Jérôme Balard", phase: "Liquid", ionizationEnergy: 11.814, electronAffinity: 3.364, valence: 1, abundance: "0.0003%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "orthorhombic", protons: 35, neutrons: 45, electrons: 35, shells: [2, 8, 18, 7], xpos: 17, ypos: 4, description: "One of only two liquid elements at room temperature. Used in flame retardants." },
-  { number: 36, symbol: "Kr", name: "Krypton", mass: 83.798, group: 18, period: 4, category: "noble gas", electronegativity: null, radius: 88, meltingPoint: -157.36, boilingPoint: -153.22, density: 0.00375, oxidationStates: "0, +2", electronConfig: "[Ar] 3d¹⁰ 4s² 4p⁶", discovered: 1898, discoveredBy: "William Ramsay", phase: "Gas", ionizationEnergy: 14.0, electronAffinity: 0, valence: 0, abundance: "0.000114%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 36, neutrons: 48, electrons: 36, shells: [2, 8, 18, 8], xpos: 18, ypos: 4, description: "Dense noble gas used in high-powered lasers and specialized lighting." },
-  { number: 37, symbol: "Rb", name: "Rubidium", mass: 85.468, group: 1, period: 5, category: "alkali metal", electronegativity: 0.82, radius: 265, meltingPoint: 39.31, boilingPoint: 688, density: 1.532, oxidationStates: "+1", electronConfig: "[Kr] 5s¹", discovered: 1861, discoveredBy: "Robert Bunsen", phase: "Solid", ionizationEnergy: 4.177, electronAffinity: 0.468, valence: 1, abundance: "0.009%", hardness: 0.3, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 37, neutrons: 48, electrons: 37, shells: [2, 8, 18, 8, 1], xpos: 1, ypos: 5, description: "Soft, reactive alkali metal. Used in atomic clocks and medical imaging." },
-  { number: 38, symbol: "Sr", name: "Strontium", mass: 87.62, group: 2, period: 5, category: "alkaline earth metal", electronegativity: 0.95, radius: 219, meltingPoint: 777, boilingPoint: 1382, density: 2.64, oxidationStates: "+2", electronConfig: "[Kr] 5s²", discovered: 1790, discoveredBy: "Adair Crawford", phase: "Solid", ionizationEnergy: 5.695, electronAffinity: 0.052, valence: 2, abundance: "0.036%", hardness: 1.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "fcc", protons: 38, neutrons: 50, electrons: 38, shells: [2, 8, 18, 8, 2], xpos: 2, ypos: 5, description: "Alkaline earth metal that burns bright red. Used in fireworks and bone treatments." },
-  { number: 39, symbol: "Y", name: "Yttrium", mass: 88.906, group: 3, period: 5, category: "transition metal", electronegativity: 1.22, radius: 212, meltingPoint: 1526, boilingPoint: 3336, density: 4.472, oxidationStates: "+3", electronConfig: "[Kr] 4d¹ 5s²", discovered: 1794, discoveredBy: "Johan Gadolin", phase: "Solid", ionizationEnergy: 6.217, electronAffinity: 0.307, valence: 3, abundance: "0.0033%", hardness: null, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 39, neutrons: 50, electrons: 39, shells: [2, 8, 18, 9, 2], xpos: 3, ypos: 5, description: "Rare earth metal used in LED phosphors, camera lenses, and cancer treatment." },
-  { number: 40, symbol: "Zr", name: "Zirconium", mass: 91.224, group: 4, period: 5, category: "transition metal", electronegativity: 1.33, radius: 206, meltingPoint: 1855, boilingPoint: 4409, density: 6.511, oxidationStates: "+4", electronConfig: "[Kr] 4d² 5s²", discovered: 1789, discoveredBy: "Martin Heinrich Klaproth", phase: "Solid", ionizationEnergy: 6.634, electronAffinity: 0.426, valence: 4, abundance: "0.016%", hardness: 5.0, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 40, neutrons: 51, electrons: 40, shells: [2, 8, 18, 10, 2], xpos: 4, ypos: 5, description: "Corrosion-resistant metal used in nuclear reactors and as a diamond substitute in jewelry." },
-  { number: 41, symbol: "Nb", name: "Niobium", mass: 92.906, group: 5, period: 5, category: "transition metal", electronegativity: 1.6, radius: 198, meltingPoint: 2477, boilingPoint: 4744, density: 8.57, oxidationStates: "+5, +3", electronConfig: "[Kr] 4d⁴ 5s¹", discovered: 1801, discoveredBy: "Charles Hatchett", phase: "Solid", ionizationEnergy: 6.759, electronAffinity: 0.917, valence: 5, abundance: "0.002%", hardness: 6.0, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 41, neutrons: 52, electrons: 41, shells: [2, 8, 18, 12, 1], xpos: 5, ypos: 5, description: "Superconducting metal used in MRI machines, particle accelerators, and jet engines." },
-  { number: 42, symbol: "Mo", name: "Molybdenum", mass: 95.95, group: 6, period: 5, category: "transition metal", electronegativity: 2.16, radius: 190, meltingPoint: 2623, boilingPoint: 4639, density: 10.28, oxidationStates: "+6,+4,+3,+2", electronConfig: "[Kr] 4d⁵ 5s¹", discovered: 1781, discoveredBy: "Carl Wilhelm Scheele", phase: "Solid", ionizationEnergy: 7.092, electronAffinity: 0.746, valence: 6, abundance: "0.00011%", hardness: 5.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 42, neutrons: 54, electrons: 42, shells: [2, 8, 18, 13, 1], xpos: 6, ypos: 5, description: "High melting point metal used in high-strength steel alloys and as a catalyst." },
-  { number: 43, symbol: "Tc", name: "Technetium", mass: 98, group: 7, period: 5, category: "transition metal", electronegativity: 1.9, radius: 183, meltingPoint: 2157, boilingPoint: 4265, density: 11.5, oxidationStates: "+7,+4", electronConfig: "[Kr] 4d⁵ 5s²", discovered: 1937, discoveredBy: "Carlo Perrier", phase: "Solid", ionizationEnergy: 7.28, electronAffinity: 0.55, valence: 7, abundance: "trace", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 43, neutrons: 55, electrons: 43, shells: [2, 8, 18, 13, 2], xpos: 7, ypos: 5, description: "First artificially produced element. Radioactive, used in medical imaging as Tc-99m." },
-  { number: 44, symbol: "Ru", name: "Ruthenium", mass: 101.07, group: 8, period: 5, category: "transition metal", electronegativity: 2.2, radius: 178, meltingPoint: 2334, boilingPoint: 4150, density: 12.45, oxidationStates: "+8,+4,+3,+2", electronConfig: "[Kr] 4d⁷ 5s¹", discovered: 1844, discoveredBy: "Karl Ernst Claus", phase: "Solid", ionizationEnergy: 7.361, electronAffinity: 1.05, valence: 4, abundance: "0.000001%", hardness: 6.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 44, neutrons: 57, electrons: 44, shells: [2, 8, 18, 15, 1], xpos: 8, ypos: 5, description: "Platinum group metal used in hard disk coatings and as a chemical catalyst." },
-  { number: 45, symbol: "Rh", name: "Rhodium", mass: 102.91, group: 9, period: 5, category: "transition metal", electronegativity: 2.28, radius: 173, meltingPoint: 1964, boilingPoint: 3695, density: 12.41, oxidationStates: "+3", electronConfig: "[Kr] 4d⁸ 5s¹", discovered: 1803, discoveredBy: "William Hyde Wollaston", phase: "Solid", ionizationEnergy: 7.459, electronAffinity: 1.137, valence: 3, abundance: "0.0000002%", hardness: 6.0, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "fcc", protons: 45, neutrons: 58, electrons: 45, shells: [2, 8, 18, 16, 1], xpos: 9, ypos: 5, description: "Rarest and most precious metal. Used in catalytic converters and jewelry." },
-  { number: 46, symbol: "Pd", name: "Palladium", mass: 106.42, group: 10, period: 5, category: "transition metal", electronegativity: 2.20, radius: 169, meltingPoint: 1554.9, boilingPoint: 2963, density: 12.023, oxidationStates: "+4, +2", electronConfig: "[Kr] 4d¹⁰", discovered: 1803, discoveredBy: "William Hyde Wollaston", phase: "Solid", ionizationEnergy: 8.337, electronAffinity: 0.562, valence: 4, abundance: "0.00000063%", hardness: 4.75, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "fcc", protons: 46, neutrons: 60, electrons: 46, shells: [2, 8, 18, 18], xpos: 10, ypos: 5, description: "Rare metal used in catalytic converters and hydrogen purification membranes." },
-  { number: 47, symbol: "Ag", name: "Silver", mass: 107.87, group: 11, period: 5, category: "transition metal", electronegativity: 1.93, radius: 145, meltingPoint: 961.78, boilingPoint: 2162, density: 10.49, oxidationStates: "+1", electronConfig: "[Kr] 4d¹⁰ 5s¹", discovered: -4000, discoveredBy: "Ancient peoples", phase: "Solid", ionizationEnergy: 7.576, electronAffinity: 1.302, valence: 1, abundance: "0.0000079%", hardness: 2.5, conductivity: "excellent", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 47, neutrons: 61, electrons: 47, shells: [2, 8, 18, 18, 1], xpos: 11, ypos: 5, description: "Highest electrical and thermal conductivity of all elements. Used in jewelry, mirrors, and antimicrobials." },
-  { number: 48, symbol: "Cd", name: "Cadmium", mass: 112.41, group: 12, period: 5, category: "transition metal", electronegativity: 1.69, radius: 151, meltingPoint: 321.07, boilingPoint: 767, density: 8.65, oxidationStates: "+2", electronConfig: "[Kr] 4d¹⁰ 5s²", discovered: 1817, discoveredBy: "Friedrich Stromeyer", phase: "Solid", ionizationEnergy: 8.994, electronAffinity: 0, valence: 2, abundance: "0.000015%", hardness: 2.0, conductivity: "moderate", magnetism: "diamagnetic", crystalStructure: "hcp", protons: 48, neutrons: 64, electrons: 48, shells: [2, 8, 18, 18, 2], xpos: 12, ypos: 5, description: "Toxic metal used in rechargeable NiCd batteries and as a yellow pigment." },
-  { number: 49, symbol: "In", name: "Indium", mass: 114.82, group: 13, period: 5, category: "post-transition metal", electronegativity: 1.78, radius: 167, meltingPoint: 156.6, boilingPoint: 2072, density: 7.31, oxidationStates: "+3", electronConfig: "[Kr] 4d¹⁰ 5s² 5p¹", discovered: 1863, discoveredBy: "Ferdinand Reich", phase: "Solid", ionizationEnergy: 5.786, electronAffinity: 0.3, valence: 3, abundance: "0.00025%", hardness: 1.2, conductivity: "good", magnetism: "diamagnetic", crystalStructure: "tetragonal", protons: 49, neutrons: 66, electrons: 49, shells: [2, 8, 18, 18, 3], xpos: 13, ypos: 5, description: "Soft metal used in touchscreens as indium tin oxide (ITO) coating." },
-  { number: 50, symbol: "Sn", name: "Tin", mass: 118.71, group: 14, period: 5, category: "post-transition metal", electronegativity: 1.96, radius: 145, meltingPoint: 231.93, boilingPoint: 2602, density: 7.287, oxidationStates: "+4, +2", electronConfig: "[Kr] 4d¹⁰ 5s² 5p²", discovered: -3000, discoveredBy: "Ancient peoples", phase: "Solid", ionizationEnergy: 7.344, electronAffinity: 1.112, valence: 4, abundance: "0.00022%", hardness: 1.5, conductivity: "good", magnetism: "diamagnetic", crystalStructure: "tetragonal", protons: 50, neutrons: 69, electrons: 50, shells: [2, 8, 18, 18, 4], xpos: 14, ypos: 5, description: "Used in solder, bronze alloys, and tin-plated steel cans. Makes a cry sound when bent." },
-  { number: 51, symbol: "Sb", name: "Antimony", mass: 121.76, group: 15, period: 5, category: "metalloid", electronegativity: 2.05, radius: 133, meltingPoint: 630.63, boilingPoint: 1587, density: 6.697, oxidationStates: "+5,+3,-3", electronConfig: "[Kr] 4d¹⁰ 5s² 5p³", discovered: -3000, discoveredBy: "Ancient peoples", phase: "Solid", ionizationEnergy: 8.64, electronAffinity: 1.047, valence: 3, abundance: "0.00002%", hardness: 3.0, conductivity: "semiconductor", magnetism: "diamagnetic", crystalStructure: "rhombohedral", protons: 51, neutrons: 71, electrons: 51, shells: [2, 8, 18, 18, 5], xpos: 15, ypos: 5, description: "Brittle metalloid used in flame retardants and as an alloying agent in batteries." },
-  { number: 52, symbol: "Te", name: "Tellurium", mass: 127.6, group: 16, period: 5, category: "metalloid", electronegativity: 2.1, radius: 123, meltingPoint: 449.51, boilingPoint: 988, density: 6.24, oxidationStates: "+6,+4,-2", electronConfig: "[Kr] 4d¹⁰ 5s² 5p⁴", discovered: 1782, discoveredBy: "Franz-Joseph Müller", phase: "Solid", ionizationEnergy: 9.009, electronAffinity: 1.971, valence: 2, abundance: "0.0000001%", hardness: 2.25, conductivity: "semiconductor", magnetism: "diamagnetic", crystalStructure: "hexagonal", protons: 52, neutrons: 76, electrons: 52, shells: [2, 8, 18, 18, 6], xpos: 16, ypos: 5, description: "Rare metalloid used in solar panels, thermoelectric devices, and as a semiconductor." },
-  { number: 53, symbol: "I", name: "Iodine", mass: 126.9, group: 17, period: 5, category: "halogen", electronegativity: 2.66, radius: 115, meltingPoint: 113.7, boilingPoint: 184.3, density: 4.933, oxidationStates: "+7,+5,+1,-1", electronConfig: "[Kr] 4d¹⁰ 5s² 5p⁵", discovered: 1811, discoveredBy: "Bernard Courtois", phase: "Solid", ionizationEnergy: 10.451, electronAffinity: 3.059, valence: 1, abundance: "0.000014%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "orthorhombic", protons: 53, neutrons: 74, electrons: 53, shells: [2, 8, 18, 18, 7], xpos: 17, ypos: 5, description: "Essential for thyroid hormone production. Used as antiseptic and in photography." },
-  { number: 54, symbol: "Xe", name: "Xenon", mass: 131.29, group: 18, period: 5, category: "noble gas", electronegativity: null, radius: 108, meltingPoint: -111.79, boilingPoint: -108.12, density: 0.00589, oxidationStates: "0, +2, +4, +6", electronConfig: "[Kr] 4d¹⁰ 5s² 5p⁶", discovered: 1898, discoveredBy: "William Ramsay", phase: "Gas", ionizationEnergy: 12.13, electronAffinity: 0, valence: 0, abundance: "0.0000087%", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 54, neutrons: 77, electrons: 54, shells: [2, 8, 18, 18, 8], xpos: 18, ypos: 5, description: "Dense noble gas used in powerful flash lamps, ion thrusters, and anesthesia." },
-  { number: 55, symbol: "Cs", name: "Caesium", mass: 132.91, group: 1, period: 6, category: "alkali metal", electronegativity: 0.79, radius: 298, meltingPoint: 28.44, boilingPoint: 671, density: 1.873, oxidationStates: "+1", electronConfig: "[Xe] 6s¹", discovered: 1860, discoveredBy: "Robert Bunsen", phase: "Solid", ionizationEnergy: 3.894, electronAffinity: 0.472, valence: 1, abundance: "0.00019%", hardness: 0.2, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 55, neutrons: 78, electrons: 55, shells: [2, 8, 18, 18, 8, 1], xpos: 1, ypos: 6, description: "Most electropositive metal. Used in atomic clocks that define the SI second." },
-  { number: 56, symbol: "Ba", name: "Barium", mass: 137.33, group: 2, period: 6, category: "alkaline earth metal", electronegativity: 0.89, radius: 253, meltingPoint: 727, boilingPoint: 1897, density: 3.51, oxidationStates: "+2", electronConfig: "[Xe] 6s²", discovered: 1808, discoveredBy: "Humphry Davy", phase: "Solid", ionizationEnergy: 5.212, electronAffinity: 0.145, valence: 2, abundance: "0.034%", hardness: 1.25, conductivity: "good", magnetism: "diamagnetic", crystalStructure: "bcc", protons: 56, neutrons: 81, electrons: 56, shells: [2, 8, 18, 18, 8, 2], xpos: 2, ypos: 6, description: "Soft reactive metal. Barium sulfate used in medical imaging (barium meals) and paints." },
-  { number: 57, symbol: "La", name: "Lanthanum", mass: 138.91, group: 3, period: 6, category: "lanthanide", electronegativity: 1.1, radius: 240, meltingPoint: 920, boilingPoint: 3464, density: 6.162, oxidationStates: "+3", electronConfig: "[Xe] 5d¹ 6s²", discovered: 1839, discoveredBy: "Carl Gustav Mosander", phase: "Solid", ionizationEnergy: 5.577, electronAffinity: 0.5, valence: 3, abundance: "0.0034%", hardness: 2.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "dhcp", protons: 57, neutrons: 82, electrons: 57, shells: [2, 8, 18, 18, 9, 2], xpos: 4, ypos: 8, description: "First lanthanide, used in camera lenses, hydrogen storage, and high-refractive glass." },
-  { number: 58, symbol: "Ce", name: "Cerium", mass: 140.12, group: 3, period: 6, category: "lanthanide", electronegativity: 1.12, radius: 235, meltingPoint: 798, boilingPoint: 3443, density: 6.77, oxidationStates: "+4, +3", electronConfig: "[Xe] 4f¹ 5d¹ 6s²", discovered: 1803, discoveredBy: "Wilhelm Hisinger", phase: "Solid", ionizationEnergy: 5.539, electronAffinity: 0.5, valence: 4, abundance: "0.0046%", hardness: 2.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "fcc", protons: 58, neutrons: 82, electrons: 58, shells: [2, 8, 18, 19, 9, 2], xpos: 5, ypos: 8, description: "Most abundant rare earth. Used in catalytic converters and as a glass polishing agent." },
-  { number: 59, symbol: "Pr", name: "Praseodymium", mass: 140.91, group: 3, period: 6, category: "lanthanide", electronegativity: 1.13, radius: 235, meltingPoint: 931, boilingPoint: 3520, density: 6.77, oxidationStates: "+3", electronConfig: "[Xe] 4f³ 6s²", discovered: 1885, discoveredBy: "Carl Auer von Welsbach", phase: "Solid", ionizationEnergy: 5.473, electronAffinity: 0.5, valence: 3, abundance: "0.00086%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "dhcp", protons: 59, neutrons: 82, electrons: 59, shells: [2, 8, 18, 21, 8, 2], xpos: 6, ypos: 8, description: "Rare earth used in high-strength permanent magnets (NdFeB) and green glass colorants." },
-  { number: 60, symbol: "Nd", name: "Neodymium", mass: 144.24, group: 3, period: 6, category: "lanthanide", electronegativity: 1.14, radius: 229, meltingPoint: 1021, boilingPoint: 3074, density: 7.01, oxidationStates: "+3", electronConfig: "[Xe] 4f⁴ 6s²", discovered: 1885, discoveredBy: "Carl Auer von Welsbach", phase: "Solid", ionizationEnergy: 5.525, electronAffinity: 0.5, valence: 3, abundance: "0.0033%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "dhcp", protons: 60, neutrons: 84, electrons: 60, shells: [2, 8, 18, 22, 8, 2], xpos: 7, ypos: 8, description: "Used to make the strongest known permanent magnets found in motors and hard drives." },
-  { number: 61, symbol: "Pm", name: "Promethium", mass: 145, group: 3, period: 6, category: "lanthanide", electronegativity: 1.13, radius: 236, meltingPoint: 1042, boilingPoint: 3000, density: 7.26, oxidationStates: "+3", electronConfig: "[Xe] 4f⁵ 6s²", discovered: 1945, discoveredBy: "Jacob A. Marinsky", phase: "Solid", ionizationEnergy: 5.582, electronAffinity: 0.5, valence: 3, abundance: "trace", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "dhcp", protons: 61, neutrons: 84, electrons: 61, shells: [2, 8, 18, 23, 8, 2], xpos: 8, ypos: 8, description: "Only radioactive lanthanide with no stable isotopes. Used in nuclear batteries." },
-  { number: 62, symbol: "Sm", name: "Samarium", mass: 150.36, group: 3, period: 6, category: "lanthanide", electronegativity: 1.17, radius: 229, meltingPoint: 1072, boilingPoint: 1900, density: 7.52, oxidationStates: "+3, +2", electronConfig: "[Xe] 4f⁶ 6s²", discovered: 1879, discoveredBy: "Paul Emile Lecoq de Boisbaudran", phase: "Solid", ionizationEnergy: 5.644, electronAffinity: 0.5, valence: 3, abundance: "0.00073%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "rhombohedral", protons: 62, neutrons: 88, electrons: 62, shells: [2, 8, 18, 24, 8, 2], xpos: 9, ypos: 8, description: "Used in powerful samarium-cobalt permanent magnets and cancer treatment." },
-  { number: 63, symbol: "Eu", name: "Europium", mass: 151.96, group: 3, period: 6, category: "lanthanide", electronegativity: 1.2, radius: 233, meltingPoint: 822, boilingPoint: 1596, density: 5.244, oxidationStates: "+3, +2", electronConfig: "[Xe] 4f⁷ 6s²", discovered: 1901, discoveredBy: "Eugène-Anatole Demarçay", phase: "Solid", ionizationEnergy: 5.67, electronAffinity: 0.5, valence: 3, abundance: "0.0002%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 63, neutrons: 89, electrons: 63, shells: [2, 8, 18, 25, 8, 2], xpos: 10, ypos: 8, description: "Produces the red and blue colors in euro banknote security inks and TV phosphors." },
-  { number: 64, symbol: "Gd", name: "Gadolinium", mass: 157.25, group: 3, period: 6, category: "lanthanide", electronegativity: 1.2, radius: 233, meltingPoint: 1313, boilingPoint: 3273, density: 7.9, oxidationStates: "+3", electronConfig: "[Xe] 4f⁷ 5d¹ 6s²", discovered: 1880, discoveredBy: "Jean Charles Galissard de Marignac", phase: "Solid", ionizationEnergy: 6.15, electronAffinity: 0.5, valence: 3, abundance: "0.00063%", hardness: 5.0, conductivity: "moderate", magnetism: "ferromagnetic", crystalStructure: "hcp", protons: 64, neutrons: 93, electrons: 64, shells: [2, 8, 18, 25, 9, 2], xpos: 11, ypos: 8, description: "Used as an MRI contrast agent and in nuclear reactor shielding. Unique magnetic properties." },
-  { number: 65, symbol: "Tb", name: "Terbium", mass: 158.93, group: 3, period: 6, category: "lanthanide", electronegativity: 1.1, radius: 225, meltingPoint: 1356, boilingPoint: 3230, density: 8.23, oxidationStates: "+3", electronConfig: "[Xe] 4f⁹ 6s²", discovered: 1843, discoveredBy: "Carl Gustaf Mosander", phase: "Solid", ionizationEnergy: 5.864, electronAffinity: 0.5, valence: 3, abundance: "0.000093%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 65, neutrons: 94, electrons: 65, shells: [2, 8, 18, 27, 8, 2], xpos: 12, ypos: 8, description: "Used in green phosphors for TV screens and in fuel cells and sonar devices." },
-  { number: 66, symbol: "Dy", name: "Dysprosium", mass: 162.5, group: 3, period: 6, category: "lanthanide", electronegativity: 1.22, radius: 228, meltingPoint: 1412, boilingPoint: 2567, density: 8.551, oxidationStates: "+3", electronConfig: "[Xe] 4f¹⁰ 6s²", discovered: 1886, discoveredBy: "Paul Emile Lecoq de Boisbaudran", phase: "Solid", ionizationEnergy: 5.939, electronAffinity: 0.5, valence: 3, abundance: "0.00062%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 66, neutrons: 97, electrons: 66, shells: [2, 8, 18, 28, 8, 2], xpos: 13, ypos: 8, description: "Used to enhance neodymium magnets for electric vehicles and wind turbines." },
-  { number: 67, symbol: "Ho", name: "Holmium", mass: 164.93, group: 3, period: 6, category: "lanthanide", electronegativity: 1.23, radius: 226, meltingPoint: 1474, boilingPoint: 2700, density: 8.795, oxidationStates: "+3", electronConfig: "[Xe] 4f¹¹ 6s²", discovered: 1878, discoveredBy: "Marc Delafontaine", phase: "Solid", ionizationEnergy: 6.022, electronAffinity: 0.5, valence: 3, abundance: "0.00012%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 67, neutrons: 98, electrons: 67, shells: [2, 8, 18, 29, 8, 2], xpos: 14, ypos: 8, description: "Has highest magnetic moment of natural elements. Used in lasers for eye and kidney surgery." },
-  { number: 68, symbol: "Er", name: "Erbium", mass: 167.26, group: 3, period: 6, category: "lanthanide", electronegativity: 1.24, radius: 226, meltingPoint: 1529, boilingPoint: 2868, density: 9.066, oxidationStates: "+3", electronConfig: "[Xe] 4f¹² 6s²", discovered: 1843, discoveredBy: "Carl Gustaf Mosander", phase: "Solid", ionizationEnergy: 6.108, electronAffinity: 0.5, valence: 3, abundance: "0.00036%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 68, neutrons: 99, electrons: 68, shells: [2, 8, 18, 30, 8, 2], xpos: 15, ypos: 8, description: "Amplifies light in fiber optic cables. Gives rose-pink color to glasses and ceramics." },
-  { number: 69, symbol: "Tm", name: "Thulium", mass: 168.93, group: 3, period: 6, category: "lanthanide", electronegativity: 1.25, radius: 222, meltingPoint: 1545, boilingPoint: 1950, density: 9.321, oxidationStates: "+3, +2", electronConfig: "[Xe] 4f¹³ 6s²", discovered: 1879, discoveredBy: "Per Teodor Cleve", phase: "Solid", ionizationEnergy: 6.184, electronAffinity: 0.5, valence: 3, abundance: "0.000052%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 69, neutrons: 100, electrons: 69, shells: [2, 8, 18, 31, 8, 2], xpos: 16, ypos: 8, description: "Rarest lanthanide. Used in portable X-ray machines and laser materials." },
-  { number: 70, symbol: "Yb", name: "Ytterbium", mass: 173.05, group: 3, period: 6, category: "lanthanide", electronegativity: 1.1, radius: 222, meltingPoint: 819, boilingPoint: 1196, density: 6.965, oxidationStates: "+3, +2", electronConfig: "[Xe] 4f¹⁴ 6s²", discovered: 1878, discoveredBy: "Jean Charles Galissard de Marignac", phase: "Solid", ionizationEnergy: 6.254, electronAffinity: 0.5, valence: 3, abundance: "0.000031%", hardness: null, conductivity: "good", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 70, neutrons: 103, electrons: 70, shells: [2, 8, 18, 32, 8, 2], xpos: 17, ypos: 8, description: "Used in atomic clocks and as a stress gauge in materials science." },
-  { number: 71, symbol: "Lu", name: "Lutetium", mass: 174.97, group: 3, period: 6, category: "lanthanide", electronegativity: 1.27, radius: 217, meltingPoint: 1663, boilingPoint: 3402, density: 9.84, oxidationStates: "+3", electronConfig: "[Xe] 4f¹⁴ 5d¹ 6s²", discovered: 1907, discoveredBy: "Georges Urbain", phase: "Solid", ionizationEnergy: 5.426, electronAffinity: 0.5, valence: 3, abundance: "0.000079%", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 71, neutrons: 104, electrons: 71, shells: [2, 8, 18, 32, 9, 2], xpos: 18, ypos: 8, description: "Densest and hardest lanthanide. Used in PET scan detectors and as a catalyst." },
-  { number: 72, symbol: "Hf", name: "Hafnium", mass: 178.49, group: 4, period: 6, category: "transition metal", electronegativity: 1.3, radius: 208, meltingPoint: 2233, boilingPoint: 4603, density: 13.31, oxidationStates: "+4", electronConfig: "[Xe] 4f¹⁴ 5d² 6s²", discovered: 1923, discoveredBy: "Dirk Coster", phase: "Solid", ionizationEnergy: 6.825, electronAffinity: 0, valence: 4, abundance: "0.0033%", hardness: 5.5, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 72, neutrons: 106, electrons: 72, shells: [2, 8, 18, 32, 10, 2], xpos: 4, ypos: 6, description: "Used in nuclear reactor control rods and high-temperature alloys." },
-  { number: 73, symbol: "Ta", name: "Tantalum", mass: 180.95, group: 5, period: 6, category: "transition metal", electronegativity: 1.5, radius: 200, meltingPoint: 3017, boilingPoint: 5458, density: 16.654, oxidationStates: "+5", electronConfig: "[Xe] 4f¹⁴ 5d³ 6s²", discovered: 1802, discoveredBy: "Anders Gustaf Ekeberg", phase: "Solid", ionizationEnergy: 7.549, electronAffinity: 0.322, valence: 5, abundance: "0.00017%", hardness: 6.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 73, neutrons: 108, electrons: 73, shells: [2, 8, 18, 32, 11, 2], xpos: 5, ypos: 6, description: "Highly corrosion-resistant metal used in capacitors for electronics and surgical implants." },
-  { number: 74, symbol: "W", name: "Tungsten", mass: 183.84, group: 6, period: 6, category: "transition metal", electronegativity: 2.36, radius: 193, meltingPoint: 3422, boilingPoint: 5555, density: 19.25, oxidationStates: "+6,+4,+2", electronConfig: "[Xe] 4f¹⁴ 5d⁴ 6s²", discovered: 1783, discoveredBy: "Juan José Elhuyar", phase: "Solid", ionizationEnergy: 7.864, electronAffinity: 0.815, valence: 6, abundance: "0.00015%", hardness: 7.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 74, neutrons: 110, electrons: 74, shells: [2, 8, 18, 32, 12, 2], xpos: 6, ypos: 6, description: "Highest melting point of all elements. Used in light bulb filaments and drill bits." },
-  { number: 75, symbol: "Re", name: "Rhenium", mass: 186.21, group: 7, period: 6, category: "transition metal", electronegativity: 1.9, radius: 188, meltingPoint: 3186, boilingPoint: 5596, density: 21.02, oxidationStates: "+7,+4,+2", electronConfig: "[Xe] 4f¹⁴ 5d⁵ 6s²", discovered: 1925, discoveredBy: "Masataka Ogawa", phase: "Solid", ionizationEnergy: 7.833, electronAffinity: 0.15, valence: 7, abundance: "0.000000026%", hardness: 7.0, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 75, neutrons: 111, electrons: 75, shells: [2, 8, 18, 32, 13, 2], xpos: 7, ypos: 6, description: "One of rarest elements, second highest melting point. Used in jet engine alloys." },
-  { number: 76, symbol: "Os", name: "Osmium", mass: 190.23, group: 8, period: 6, category: "transition metal", electronegativity: 2.2, radius: 185, meltingPoint: 3033, boilingPoint: 5012, density: 22.59, oxidationStates: "+8,+4,+3,+2", electronConfig: "[Xe] 4f¹⁴ 5d⁶ 6s²", discovered: 1803, discoveredBy: "Smithson Tennant", phase: "Solid", ionizationEnergy: 8.438, electronAffinity: 1.1, valence: 4, abundance: "0.0000015%", hardness: 7.0, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "hcp", protons: 76, neutrons: 114, electrons: 76, shells: [2, 8, 18, 32, 14, 2], xpos: 8, ypos: 6, description: "Densest naturally occurring element. Its tetroxide is highly toxic but used in fingerprinting." },
-  { number: 77, symbol: "Ir", name: "Iridium", mass: 192.22, group: 9, period: 6, category: "transition metal", electronegativity: 2.2, radius: 180, meltingPoint: 2446, boilingPoint: 4428, density: 22.56, oxidationStates: "+4,+3", electronConfig: "[Xe] 4f¹⁴ 5d⁷ 6s²", discovered: 1803, discoveredBy: "Smithson Tennant", phase: "Solid", ionizationEnergy: 8.967, electronAffinity: 1.565, valence: 4, abundance: "0.0000004%", hardness: 6.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "fcc", protons: 77, neutrons: 115, electrons: 77, shells: [2, 8, 18, 32, 15, 2], xpos: 9, ypos: 6, description: "Most corrosion-resistant metal known. Evidence of iridium anomaly marks the dinosaur extinction event." },
-  { number: 78, symbol: "Pt", name: "Platinum", mass: 195.08, group: 10, period: 6, category: "transition metal", electronegativity: 2.28, radius: 177, meltingPoint: 1768.3, boilingPoint: 3825, density: 21.45, oxidationStates: "+4, +2", electronConfig: "[Xe] 4f¹⁴ 5d⁹ 6s¹", discovered: 1748, discoveredBy: "Antonio de Ulloa", phase: "Solid", ionizationEnergy: 8.959, electronAffinity: 2.128, valence: 4, abundance: "0.00000037%", hardness: 3.5, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "fcc", protons: 78, neutrons: 117, electrons: 78, shells: [2, 8, 18, 32, 17, 1], xpos: 10, ypos: 6, description: "Precious metal used in catalytic converters, jewelry, and cancer chemotherapy drugs." },
-  { number: 79, symbol: "Au", name: "Gold", mass: 196.97, group: 11, period: 6, category: "transition metal", electronegativity: 2.54, radius: 174, meltingPoint: 1064.18, boilingPoint: 2856, density: 19.3, oxidationStates: "+3, +1", electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s¹", discovered: -2600, discoveredBy: "Ancient peoples", phase: "Solid", ionizationEnergy: 9.226, electronAffinity: 2.309, valence: 3, abundance: "0.0000003%", hardness: 2.5, conductivity: "excellent", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 79, neutrons: 118, electrons: 79, shells: [2, 8, 18, 32, 18, 1], xpos: 11, ypos: 6, description: "Malleable, corrosion-resistant precious metal. Symbol of wealth and used in electronics." },
-  { number: 80, symbol: "Hg", name: "Mercury", mass: 200.59, group: 12, period: 6, category: "transition metal", electronegativity: 2.0, radius: 171, meltingPoint: -38.83, boilingPoint: 356.73, density: 13.546, oxidationStates: "+2, +1", electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s²", discovered: -2000, discoveredBy: "Ancient peoples", phase: "Liquid", ionizationEnergy: 10.438, electronAffinity: 0, valence: 2, abundance: "0.000000067%", hardness: null, conductivity: "moderate", magnetism: "diamagnetic", crystalStructure: "rhombohedral", protons: 80, neutrons: 121, electrons: 80, shells: [2, 8, 18, 32, 18, 2], xpos: 12, ypos: 6, description: "Only metal liquid at room temperature. Highly toxic. Used in thermometers and fluorescent lamps." },
-  { number: 81, symbol: "Tl", name: "Thallium", mass: 204.38, group: 13, period: 6, category: "post-transition metal", electronegativity: 1.62, radius: 156, meltingPoint: 304, boilingPoint: 1473, density: 11.85, oxidationStates: "+3, +1", electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p¹", discovered: 1861, discoveredBy: "William Crookes", phase: "Solid", ionizationEnergy: 6.108, electronAffinity: 0.2, valence: 1, abundance: "0.00053%", hardness: 1.2, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "hcp", protons: 81, neutrons: 123, electrons: 81, shells: [2, 8, 18, 32, 18, 3], xpos: 13, ypos: 6, description: "Highly toxic soft metal, formerly used in rat poison. Now used in medical imaging." },
-  { number: 82, symbol: "Pb", name: "Lead", mass: 207.2, group: 14, period: 6, category: "post-transition metal", electronegativity: 2.33, radius: 175, meltingPoint: 327.46, boilingPoint: 1749, density: 11.34, oxidationStates: "+4, +2", electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²", discovered: -7000, discoveredBy: "Ancient peoples", phase: "Solid", ionizationEnergy: 7.417, electronAffinity: 0.364, valence: 4, abundance: "0.00099%", hardness: 1.5, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 82, neutrons: 125, electrons: 82, shells: [2, 8, 18, 32, 18, 4], xpos: 14, ypos: 6, description: "Dense, toxic soft metal. Used in car batteries, radiation shielding, and historically in paints." },
-  { number: 83, symbol: "Bi", name: "Bismuth", mass: 208.98, group: 15, period: 6, category: "post-transition metal", electronegativity: 2.02, radius: 156, meltingPoint: 271.5, boilingPoint: 1564, density: 9.807, oxidationStates: "+5, +3", electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³", discovered: 1400, discoveredBy: "Basil Valentine", phase: "Solid", ionizationEnergy: 7.285, electronAffinity: 0.946, valence: 3, abundance: "0.0000025%", hardness: 2.25, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "rhombohedral", protons: 83, neutrons: 126, electrons: 83, shells: [2, 8, 18, 32, 18, 5], xpos: 15, ypos: 6, description: "Heaviest stable element with a beautiful rainbow oxide. Non-toxic replacement for lead." },
-  { number: 84, symbol: "Po", name: "Polonium", mass: 209, group: 16, period: 6, category: "post-transition metal", electronegativity: 2.0, radius: 167, meltingPoint: 254, boilingPoint: 962, density: 9.32, oxidationStates: "+4, +2", electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴", discovered: 1898, discoveredBy: "Marie Curie", phase: "Solid", ionizationEnergy: 8.417, electronAffinity: 1.9, valence: 4, abundance: "trace", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "cubic", protons: 84, neutrons: 125, electrons: 84, shells: [2, 8, 18, 32, 18, 6], xpos: 16, ypos: 6, description: "Highly radioactive element discovered by Marie Curie. Used in antistatic devices." },
-  { number: 85, symbol: "At", name: "Astatine", mass: 210, group: 17, period: 6, category: "halogen", electronegativity: 2.2, radius: 150, meltingPoint: 302, boilingPoint: 337, density: null, oxidationStates: "+7,+5,+1,-1", electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁵", discovered: 1940, discoveredBy: "Dale R. Corson", phase: "Solid", ionizationEnergy: 9.0, electronAffinity: 2.8, valence: 1, abundance: "trace", hardness: null, conductivity: "poor", magnetism: "unknown", crystalStructure: "unknown", protons: 85, neutrons: 125, electrons: 85, shells: [2, 8, 18, 32, 18, 7], xpos: 17, ypos: 6, description: "Rarest naturally occurring element on Earth. Used in cancer treatment (alpha radiation therapy)." },
-  { number: 86, symbol: "Rn", name: "Radon", mass: 222, group: 18, period: 6, category: "noble gas", electronegativity: null, radius: 145, meltingPoint: -71, boilingPoint: -61.7, density: 0.00973, oxidationStates: "0", electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁶", discovered: 1900, discoveredBy: "Friedrich Ernst Dorn", phase: "Gas", ionizationEnergy: 10.745, electronAffinity: 0, valence: 0, abundance: "trace", hardness: null, conductivity: "poor", magnetism: "diamagnetic", crystalStructure: "fcc", protons: 86, neutrons: 136, electrons: 86, shells: [2, 8, 18, 32, 18, 8], xpos: 18, ypos: 6, description: "Radioactive noble gas. Second leading cause of lung cancer from natural uranium decay." },
-  { number: 87, symbol: "Fr", name: "Francium", mass: 223, group: 1, period: 7, category: "alkali metal", electronegativity: 0.7, radius: null, meltingPoint: 27, boilingPoint: 677, density: null, oxidationStates: "+1", electronConfig: "[Rn] 7s¹", discovered: 1939, discoveredBy: "Marguerite Perey", phase: "Solid", ionizationEnergy: 4.073, electronAffinity: 0.486, valence: 1, abundance: "trace", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 87, neutrons: 136, electrons: 87, shells: [2, 8, 18, 32, 18, 8, 1], xpos: 1, ypos: 7, description: "Rarest naturally occurring element. Extremely radioactive with half-life of only 22 minutes." },
-  { number: 88, symbol: "Ra", name: "Radium", mass: 226, group: 2, period: 7, category: "alkaline earth metal", electronegativity: 0.9, radius: null, meltingPoint: 700, boilingPoint: 1737, density: 5.0, oxidationStates: "+2", electronConfig: "[Rn] 7s²", discovered: 1898, discoveredBy: "Marie Curie", phase: "Solid", ionizationEnergy: 5.279, electronAffinity: 0.1, valence: 2, abundance: "trace", hardness: null, conductivity: "good", magnetism: "paramagnetic", crystalStructure: "bcc", protons: 88, neutrons: 138, electrons: 88, shells: [2, 8, 18, 32, 18, 8, 2], xpos: 2, ypos: 7, description: "Highly radioactive metal discovered by Marie Curie. Historically used in glow-in-dark paint." },
-  { number: 89, symbol: "Ac", name: "Actinium", mass: 227, group: 3, period: 7, category: "actinide", electronegativity: 1.1, radius: null, meltingPoint: 1051, boilingPoint: 3198, density: 10.07, oxidationStates: "+3", electronConfig: "[Rn] 6d¹ 7s²", discovered: 1899, discoveredBy: "André-Louis Debierne", phase: "Solid", ionizationEnergy: 5.17, electronAffinity: 0.35, valence: 3, abundance: "trace", hardness: null, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "fcc", protons: 89, neutrons: 138, electrons: 89, shells: [2, 8, 18, 32, 18, 9, 2], xpos: 3, ypos: 9, description: "Highly radioactive, glows blue in the dark. Used in cancer radiotherapy." },
-  { number: 90, symbol: "Th", name: "Thorium", mass: 232.04, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 1750, boilingPoint: 4788, density: 11.72, oxidationStates: "+4", electronConfig: "[Rn] 6d² 7s²", discovered: 1829, discoveredBy: "Jöns Jacob Berzelius", phase: "Solid", ionizationEnergy: 6.307, electronAffinity: 0.608, valence: 4, abundance: "0.0006%", hardness: 3.0, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "fcc", protons: 90, neutrons: 142, electrons: 90, shells: [2, 8, 18, 32, 18, 10, 2], xpos: 4, ypos: 9, description: "Weakly radioactive metal. Considered a future nuclear fuel with much less waste than uranium." },
-  { number: 91, symbol: "Pa", name: "Protactinium", mass: 231.04, group: 3, period: 7, category: "actinide", electronegativity: 1.5, radius: null, meltingPoint: 1572, boilingPoint: 4000, density: 15.37, oxidationStates: "+5, +4", electronConfig: "[Rn] 5f² 6d¹ 7s²", discovered: 1913, discoveredBy: "Kasimir Fajans", phase: "Solid", ionizationEnergy: 5.89, electronAffinity: 0.55, valence: 5, abundance: "trace", hardness: null, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "tetragonal", protons: 91, neutrons: 140, electrons: 91, shells: [2, 8, 18, 32, 20, 9, 2], xpos: 5, ypos: 9, description: "Rare, highly toxic, and radioactive metal. Found in uranium ores, precursor to uranium-233." },
-  { number: 92, symbol: "U", name: "Uranium", mass: 238.03, group: 3, period: 7, category: "actinide", electronegativity: 1.38, radius: 196, meltingPoint: 1135, boilingPoint: 4131, density: 19.1, oxidationStates: "+6,+5,+4,+3", electronConfig: "[Rn] 5f³ 6d¹ 7s²", discovered: 1789, discoveredBy: "Martin Heinrich Klaproth", phase: "Solid", ionizationEnergy: 6.194, electronAffinity: 0, valence: 6, abundance: "0.00018%", hardness: 6.0, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "orthorhombic", protons: 92, neutrons: 146, electrons: 92, shells: [2, 8, 18, 32, 21, 9, 2], xpos: 6, ypos: 9, description: "Radioactive metal, primary fuel for nuclear reactors. Half-life of 4.5 billion years." },
-  { number: 93, symbol: "Np", name: "Neptunium", mass: 237, group: 3, period: 7, category: "actinide", electronegativity: 1.36, radius: null, meltingPoint: 644, boilingPoint: 4000, density: 20.45, oxidationStates: "+6,+5,+4,+3", electronConfig: "[Rn] 5f⁴ 6d¹ 7s²", discovered: 1940, discoveredBy: "Edwin McMillan", phase: "Solid", ionizationEnergy: 6.266, electronAffinity: 0, valence: 5, abundance: "trace", hardness: null, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "orthorhombic", protons: 93, neutrons: 144, electrons: 93, shells: [2, 8, 18, 32, 22, 9, 2], xpos: 7, ypos: 9, description: "First transuranium element. Radioactive, found in trace amounts in uranium ores." },
-  { number: 94, symbol: "Pu", name: "Plutonium", mass: 244, group: 3, period: 7, category: "actinide", electronegativity: 1.28, radius: null, meltingPoint: 640, boilingPoint: 3230, density: 19.816, oxidationStates: "+6,+5,+4,+3", electronConfig: "[Rn] 5f⁶ 7s²", discovered: 1940, discoveredBy: "Glenn T. Seaborg", phase: "Solid", ionizationEnergy: 6.026, electronAffinity: 0, valence: 4, abundance: "trace", hardness: null, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "monoclinic", protons: 94, neutrons: 150, electrons: 94, shells: [2, 8, 18, 32, 24, 8, 2], xpos: 8, ypos: 9, description: "Key fissile material for nuclear weapons and reactors. Extremely radioactive and toxic." },
-  { number: 95, symbol: "Am", name: "Americium", mass: 243, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 1176, boilingPoint: 2607, density: 13.67, oxidationStates: "+4, +3", electronConfig: "[Rn] 5f⁷ 7s²", discovered: 1944, discoveredBy: "Glenn T. Seaborg", phase: "Solid", ionizationEnergy: 5.974, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "dhcp", protons: 95, neutrons: 148, electrons: 95, shells: [2, 8, 18, 32, 25, 8, 2], xpos: 9, ypos: 9, description: "Synthetic actinide found in smoke detectors as Am-241. Created in nuclear reactors." },
-  { number: 96, symbol: "Cm", name: "Curium", mass: 247, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 1345, boilingPoint: 3110, density: 13.51, oxidationStates: "+4, +3", electronConfig: "[Rn] 5f⁷ 6d¹ 7s²", discovered: 1944, discoveredBy: "Glenn T. Seaborg", phase: "Solid", ionizationEnergy: 5.991, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "moderate", magnetism: "paramagnetic", crystalStructure: "dhcp", protons: 96, neutrons: 151, electrons: 96, shells: [2, 8, 18, 32, 25, 9, 2], xpos: 10, ypos: 9, description: "Named after Marie and Pierre Curie. Used in alpha particle X-ray spectrometers on Mars rovers." },
-  { number: 97, symbol: "Bk", name: "Berkelium", mass: 247, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 986, boilingPoint: null, density: 14.79, oxidationStates: "+4, +3", electronConfig: "[Rn] 5f⁹ 7s²", discovered: 1949, discoveredBy: "Glenn T. Seaborg", phase: "Solid", ionizationEnergy: 6.198, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "moderate", magnetism: "unknown", crystalStructure: "dhcp", protons: 97, neutrons: 150, electrons: 97, shells: [2, 8, 18, 32, 27, 8, 2], xpos: 11, ypos: 9, description: "Radioactive synthetic element named after Berkeley, California. Very rare, only micrograms produced." },
-  { number: 98, symbol: "Cf", name: "Californium", mass: 251, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 900, boilingPoint: null, density: 15.1, oxidationStates: "+4, +3", electronConfig: "[Rn] 5f¹⁰ 7s²", discovered: 1950, discoveredBy: "Glenn T. Seaborg", phase: "Solid", ionizationEnergy: 6.282, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "moderate", magnetism: "unknown", crystalStructure: "dhcp", protons: 98, neutrons: 153, electrons: 98, shells: [2, 8, 18, 32, 28, 8, 2], xpos: 12, ypos: 9, description: "Used as a neutron source for detecting gold and silver ore and treating cancer." },
-  { number: 99, symbol: "Es", name: "Einsteinium", mass: 252, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 860, boilingPoint: null, density: 8.84, oxidationStates: "+3", electronConfig: "[Rn] 5f¹¹ 7s²", discovered: 1952, discoveredBy: "Albert Ghiorso", phase: "Solid", ionizationEnergy: 6.42, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "moderate", magnetism: "unknown", crystalStructure: "fcc", protons: 99, neutrons: 153, electrons: 99, shells: [2, 8, 18, 32, 29, 8, 2], xpos: 13, ypos: 9, description: "Named after Albert Einstein. Discovered in debris of first hydrogen bomb test." },
-  { number: 100, symbol: "Fm", name: "Fermium", mass: 257, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 1527, boilingPoint: null, density: null, oxidationStates: "+3", electronConfig: "[Rn] 5f¹² 7s²", discovered: 1952, discoveredBy: "Albert Ghiorso", phase: "Solid", ionizationEnergy: 6.5, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 100, neutrons: 157, electrons: 100, shells: [2, 8, 18, 32, 30, 8, 2], xpos: 14, ypos: 9, description: "Named after Enrico Fermi. No practical uses due to extreme rarity, only atoms produced at a time." },
-  { number: 101, symbol: "Md", name: "Mendelevium", mass: 258, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 827, boilingPoint: null, density: null, oxidationStates: "+3", electronConfig: "[Rn] 5f¹³ 7s²", discovered: 1955, discoveredBy: "Albert Ghiorso", phase: "Solid", ionizationEnergy: 6.58, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 101, neutrons: 157, electrons: 101, shells: [2, 8, 18, 32, 31, 8, 2], xpos: 15, ypos: 9, description: "Named after Dmitri Mendeleev, creator of the periodic table. Only nanograms ever produced." },
-  { number: 102, symbol: "No", name: "Nobelium", mass: 259, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 827, boilingPoint: null, density: null, oxidationStates: "+3, +2", electronConfig: "[Rn] 5f¹⁴ 7s²", discovered: 1966, discoveredBy: "Georgy Flyorov", phase: "Solid", ionizationEnergy: 6.65, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 102, neutrons: 157, electrons: 102, shells: [2, 8, 18, 32, 32, 8, 2], xpos: 16, ypos: 9, description: "Named after Alfred Nobel. Synthetic element with no known practical applications." },
-  { number: 103, symbol: "Lr", name: "Lawrencium", mass: 262, group: 3, period: 7, category: "actinide", electronegativity: 1.3, radius: null, meltingPoint: 1627, boilingPoint: null, density: null, oxidationStates: "+3", electronConfig: "[Rn] 5f¹⁴ 7s² 7p¹", discovered: 1961, discoveredBy: "Albert Ghiorso", phase: "Solid", ionizationEnergy: 4.9, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 103, neutrons: 159, electrons: 103, shells: [2, 8, 18, 32, 32, 8, 3], xpos: 17, ypos: 9, description: "Last actinide element. Named after Ernest Lawrence, inventor of the cyclotron." },
-  { number: 104, symbol: "Rf", name: "Rutherfordium", mass: 267, group: 4, period: 7, category: "transition metal", electronegativity: null, radius: null, meltingPoint: 2100, boilingPoint: 5500, density: 23.2, oxidationStates: "+4", electronConfig: "[Rn] 5f¹⁴ 6d² 7s²", discovered: 1969, discoveredBy: "Albert Ghiorso", phase: "Solid", ionizationEnergy: 6.01, electronAffinity: 0, valence: 4, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 104, neutrons: 163, electrons: 104, shells: [2, 8, 18, 32, 32, 10, 2], xpos: 4, ypos: 7, description: "Named after Ernest Rutherford. Superheavy transactinide element with no practical uses." },
-  { number: 105, symbol: "Db", name: "Dubnium", mass: 268, group: 5, period: 7, category: "transition metal", electronegativity: null, radius: null, meltingPoint: null, boilingPoint: null, density: 29.3, oxidationStates: "+5", electronConfig: "[Rn] 5f¹⁴ 6d³ 7s²", discovered: 1970, discoveredBy: "Albert Ghiorso", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 5, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 105, neutrons: 163, electrons: 105, shells: [2, 8, 18, 32, 32, 11, 2], xpos: 5, ypos: 7, description: "Named after Dubna, Russia. Transactinide element, only atoms produced at a time." },
-  { number: 106, symbol: "Sg", name: "Seaborgium", mass: 271, group: 6, period: 7, category: "transition metal", electronegativity: null, radius: null, meltingPoint: null, boilingPoint: null, density: 35.0, oxidationStates: "+6", electronConfig: "[Rn] 5f¹⁴ 6d⁴ 7s²", discovered: 1974, discoveredBy: "Albert Ghiorso", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 6, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 106, neutrons: 165, electrons: 106, shells: [2, 8, 18, 32, 32, 12, 2], xpos: 6, ypos: 7, description: "Named after Glenn T. Seaborg. Extremely radioactive with half-life of only minutes." },
-  { number: 107, symbol: "Bh", name: "Bohrium", mass: 272, group: 7, period: 7, category: "transition metal", electronegativity: null, radius: null, meltingPoint: null, boilingPoint: null, density: 37.1, oxidationStates: "+7", electronConfig: "[Rn] 5f¹⁴ 6d⁵ 7s²", discovered: 1981, discoveredBy: "Gottfried Münzenberg", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 7, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 107, neutrons: 165, electrons: 107, shells: [2, 8, 18, 32, 32, 13, 2], xpos: 7, ypos: 7, description: "Named after Niels Bohr. Decays rapidly with half-life of 17 seconds for most stable isotope." },
-  { number: 108, symbol: "Hs", name: "Hassium", mass: 277, group: 8, period: 7, category: "transition metal", electronegativity: null, radius: null, meltingPoint: null, boilingPoint: null, density: 40.7, oxidationStates: "+8", electronConfig: "[Rn] 5f¹⁴ 6d⁶ 7s²", discovered: 1984, discoveredBy: "Gottfried Münzenberg", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 8, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 108, neutrons: 169, electrons: 108, shells: [2, 8, 18, 32, 32, 14, 2], xpos: 8, ypos: 7, description: "Named after Hesse, Germany. Predicted to be a solid metal with very high melting point." },
-  { number: 109, symbol: "Mt", name: "Meitnerium", mass: 278, group: 9, period: 7, category: "transition metal", electronegativity: null, radius: null, meltingPoint: null, boilingPoint: null, density: 37.4, oxidationStates: "+6, +3", electronConfig: "[Rn] 5f¹⁴ 6d⁷ 7s²", discovered: 1982, discoveredBy: "Gottfried Münzenberg", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 109, neutrons: 169, electrons: 109, shells: [2, 8, 18, 32, 32, 15, 2], xpos: 9, ypos: 7, description: "Named after Lise Meitner, co-discoverer of nuclear fission. Highly unstable." },
-  { number: 110, symbol: "Ds", name: "Darmstadtium", mass: 281, group: 10, period: 7, category: "transition metal", electronegativity: null, radius: null, meltingPoint: null, boilingPoint: null, density: 34.8, oxidationStates: "+8,+6,+4,+2", electronConfig: "[Rn] 5f¹⁴ 6d⁸ 7s²", discovered: 1994, discoveredBy: "Sigurd Hofmann", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 6, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 110, neutrons: 171, electrons: 110, shells: [2, 8, 18, 32, 32, 16, 2], xpos: 10, ypos: 7, description: "Named after Darmstadt, Germany. Decays in milliseconds. No practical applications." },
-  { number: 111, symbol: "Rg", name: "Roentgenium", mass: 282, group: 11, period: 7, category: "transition metal", electronegativity: null, radius: null, meltingPoint: null, boilingPoint: null, density: 28.7, oxidationStates: "+3, +1", electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s¹", discovered: 1994, discoveredBy: "Sigurd Hofmann", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 111, neutrons: 171, electrons: 111, shells: [2, 8, 18, 32, 32, 17, 2], xpos: 11, ypos: 7, description: "Named after Wilhelm Röntgen, discoverer of X-rays. Extremely radioactive and unstable." },
-  { number: 112, symbol: "Cn", name: "Copernicium", mass: 285, group: 12, period: 7, category: "transition metal", electronegativity: null, radius: null, meltingPoint: null, boilingPoint: null, density: 23.7, oxidationStates: "+4, +2", electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s²", discovered: 1996, discoveredBy: "Sigurd Hofmann", phase: "Gas", ionizationEnergy: null, electronAffinity: 0, valence: 2, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 112, neutrons: 173, electrons: 112, shells: [2, 8, 18, 32, 32, 18, 2], xpos: 12, ypos: 7, description: "Named after Nicolaus Copernicus. May be a gas at room temperature unlike other metals." },
-  { number: 113, symbol: "Nh", name: "Nihonium", mass: 286, group: 13, period: 7, category: "post-transition metal", electronegativity: null, radius: null, meltingPoint: 430, boilingPoint: 1130, density: 16.0, oxidationStates: "+3, +1", electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p¹", discovered: 2004, discoveredBy: "Kosuke Morita", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 113, neutrons: 173, electrons: 113, shells: [2, 8, 18, 32, 32, 18, 3], xpos: 13, ypos: 7, description: "Named after Japan (Nihon). First element discovered in Asia. Decays in milliseconds." },
-  { number: 114, symbol: "Fl", name: "Flerovium", mass: 289, group: 14, period: 7, category: "post-transition metal", electronegativity: null, radius: null, meltingPoint: null, boilingPoint: null, density: 14.0, oxidationStates: "+6, +4, +2", electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p²", discovered: 1999, discoveredBy: "Yuri Oganessian", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 4, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 114, neutrons: 175, electrons: 114, shells: [2, 8, 18, 32, 32, 18, 4], xpos: 14, ypos: 7, description: "Named after Flerov Laboratory. May behave like a noble gas rather than a metal. Very unstable." },
-  { number: 115, symbol: "Mc", name: "Moscovium", mass: 290, group: 15, period: 7, category: "post-transition metal", electronegativity: null, radius: null, meltingPoint: 400, boilingPoint: 1100, density: 13.5, oxidationStates: "+3, +1", electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p³", discovered: 2003, discoveredBy: "Yuri Oganessian", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 3, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 115, neutrons: 175, electrons: 115, shells: [2, 8, 18, 32, 32, 18, 5], xpos: 15, ypos: 7, description: "Named after Moscow Oblast, Russia. Confirmed as element 115 in 2015. Decays in microseconds." },
-  { number: 116, symbol: "Lv", name: "Livermorium", mass: 293, group: 16, period: 7, category: "post-transition metal", electronegativity: null, radius: null, meltingPoint: 637, boilingPoint: 1085, density: 12.9, oxidationStates: "+4, +2", electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁴", discovered: 2000, discoveredBy: "Yuri Oganessian", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 4, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 116, neutrons: 177, electrons: 116, shells: [2, 8, 18, 32, 32, 18, 6], xpos: 16, ypos: 7, description: "Named after Livermore, California. Decays almost immediately with half-life of milliseconds." },
-  { number: 117, symbol: "Ts", name: "Tennessine", mass: 294, group: 17, period: 7, category: "halogen", electronegativity: null, radius: null, meltingPoint: 623, boilingPoint: 883, density: 7.17, oxidationStates: "+5, +3, +1, -1", electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁵", discovered: 2010, discoveredBy: "Yuri Oganessian", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 1, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 117, neutrons: 177, electrons: 117, shells: [2, 8, 18, 32, 32, 18, 7], xpos: 17, ypos: 7, description: "Named after Tennessee, USA. Newest confirmed element. Expected to have properties of a metalloid." },
-  { number: 118, symbol: "Og", name: "Oganesson", mass: 294, group: 18, period: 7, category: "noble gas", electronegativity: null, radius: null, meltingPoint: 52, boilingPoint: 177, density: 7.0, oxidationStates: "0, +4, +6", electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁶", discovered: 2002, discoveredBy: "Yuri Oganessian", phase: "Solid", ionizationEnergy: null, electronAffinity: 0, valence: 0, abundance: "synthetic", hardness: null, conductivity: "unknown", magnetism: "unknown", crystalStructure: "unknown", protons: 118, neutrons: 176, electrons: 118, shells: [2, 8, 18, 32, 32, 18, 8], xpos: 18, ypos: 7, description: "Named after physicist Yuri Oganessian. Heaviest element confirmed. May be a solid, not a gas." },
-];
-
-
-const CATEGORY_COLORS = {
-  "alkali metal": { light: "#ff6b6b", dark: "#ff4444", label: "Alkali Metal" },
-  "alkaline earth metal": { light: "#ffd93d", dark: "#ffcc00", label: "Alkaline Earth" },
-  "transition metal": { light: "#6bcb77", dark: "#4caf50", label: "Transition Metal" },
-  "post-transition metal": { light: "#4d96ff", dark: "#2979ff", label: "Post-Transition" },
-  "metalloid": { light: "#ff9f1c", dark: "#ff8c00", label: "Metalloid" },
-  "nonmetal": { light: "#c77dff", dark: "#9c40ff", label: "Nonmetal" },
-  "halogen": { light: "#00b4d8", dark: "#0096c7", label: "Halogen" },
-  "noble gas": { light: "#ff6392", dark: "#e91e63", label: "Noble Gas" },
-  "lanthanide": { light: "#70e000", dark: "#4caf00", label: "Lanthanide" },
-  "actinide": { light: "#f72585", dark: "#c2185b", label: "Actinide" },
+// Isotope data per element
+const ISOTOPE_DATA = {
+  88: [
+    { symbol: "²²³Ra", name: "Radium-223",  massNumber: 223, neutrons: 135, abundance: "Trace",     halfLife: "11.435 days",  spin: "3/2", binding: 7.768, radioactive: true, decayMode: "α",  notes: "FDA-approved alpha emitter for bone metastases (Xofigo/Alpharadin)." },
+    { symbol: "²²⁴Ra", name: "Radium-224",  massNumber: 224, neutrons: 136, abundance: "Trace",     halfLife: "3.6319 days",  spin: "0",   binding: 7.774, radioactive: true, decayMode: "α",  notes: "Member of thorium-228 decay chain. Used in targeted alpha therapy research." },
+    { symbol: "²²⁵Ra", name: "Radium-225",  massNumber: 225, neutrons: 137, abundance: "Trace",     halfLife: "14.9 days",    spin: "1/2", binding: 7.758, radioactive: true, decayMode: "β⁻", notes: "Parent of ²²⁵Ac; key isotope for targeted alpha therapy generator." },
+    { symbol: "²²⁶Ra", name: "Radium-226",  massNumber: 226, neutrons: 138, abundance: "Trace",     halfLife: "1600 years",   spin: "0",   binding: 7.762, radioactive: true, decayMode: "α",  notes: "Discovered by Marie and Pierre Curie. Formerly used in luminous paint." },
+    { symbol: "²²⁸Ra", name: "Radium-228",  massNumber: 228, neutrons: 140, abundance: "Trace",     halfLife: "5.75 years",   spin: "0",   binding: 7.740, radioactive: true, decayMode: "β⁻", notes: "Member of thorium-232 decay chain." },
+    { symbol: "²²⁷Ra", name: "Radium-227",  massNumber: 227, neutrons: 139, abundance: "Trace",     halfLife: "42.2 min",     spin: "3/2", binding: 7.743, radioactive: true, decayMode: "β⁻", notes: "Short-lived member of uranium-235 decay chain." },
+  ],
+  89: [
+    { symbol: "²²⁷Ac", name: "Actinium-227",  massNumber: 227, neutrons: 138, abundance: "Trace",     halfLife: "21.772 years", spin: "3/2", binding: 7.749, radioactive: true, decayMode: "β⁻, α", notes: "Most stable actinium isotope. Used in ²²⁷Ac/²²³Ra generator for cancer therapy." },
+    { symbol: "²²⁵Ac", name: "Actinium-225",  massNumber: 225, neutrons: 136, abundance: "Trace",     halfLife: "9.9203 days",  spin: "3/2", binding: 7.748, radioactive: true, decayMode: "α",  notes: "Highly promising targeted alpha therapy agent (PSMA therapy trials)." },
+    { symbol: "²²⁸Ac", name: "Actinium-228",  massNumber: 228, neutrons: 139, abundance: "Trace",     halfLife: "6.15 h",       spin: "3",   binding: 7.726, radioactive: true, decayMode: "β⁻", notes: "Member of thorium-232 decay chain." },
+    { symbol: "²²⁶Ac", name: "Actinium-226",  massNumber: 226, neutrons: 137, abundance: "Synthetic", halfLife: "29.37 h",      spin: "1",   binding: 7.737, radioactive: true, decayMode: "β⁻, ε, α", notes: "Synthetic actinium isotope." },
+    { symbol: "²²⁴Ac", name: "Actinium-224",  massNumber: 224, neutrons: 135, abundance: "Synthetic", halfLife: "2.78 h",       spin: "0",   binding: 7.744, radioactive: true, decayMode: "α",  notes: "Short-lived synthetic actinium isotope." },
+  ],
+  90: [
+    { symbol: "²³²Th", name: "Thorium-232",  massNumber: 232, neutrons: 142, abundance: "99.98%",   halfLife: "1.4×10¹⁰ yr", spin: "0",   binding: 7.615, radioactive: true, decayMode: "α",  notes: "Primordial nuclide. Head of thorium-232 decay chain. Fertile fuel for thorium reactors." },
+    { symbol: "²³⁰Th", name: "Thorium-230",  massNumber: 230, neutrons: 140, abundance: "Trace",    halfLife: "75400 years",  spin: "0",   binding: 7.638, radioactive: true, decayMode: "α",  notes: "Useful in uranium-thorium geochronology of coral and cave formations." },
+    { symbol: "²²⁸Th", name: "Thorium-228",  massNumber: 228, neutrons: 138, abundance: "Trace",    halfLife: "1.9116 years", spin: "0",   binding: 7.660, radioactive: true, decayMode: "α",  notes: "Used in targeted alpha therapy (thorium-228/radium-224 generator chain)." },
+    { symbol: "²²⁷Th", name: "Thorium-227",  massNumber: 227, neutrons: 137, abundance: "Trace",    halfLife: "18.68 days",   spin: "3/2", binding: 7.655, radioactive: true, decayMode: "α",  notes: "Thoron. In uranium-235 decay chain. Therapeutic alpha emitter." },
+    { symbol: "²²⁹Th", name: "Thorium-229",  massNumber: 229, neutrons: 139, abundance: "Trace",    halfLife: "7932 years",   spin: "5/2", binding: 7.636, radioactive: true, decayMode: "α",  notes: "Contains the 8.3 eV nuclear isomeric transition — proposed for nuclear clock." },
+    { symbol: "²³¹Th", name: "Thorium-231",  massNumber: 231, neutrons: 141, abundance: "Trace",    halfLife: "25.52 h",      spin: "5/2", binding: 7.621, radioactive: true, decayMode: "β⁻", notes: "Short-lived member of uranium-235 decay chain." },
+    { symbol: "²³⁴Th", name: "Thorium-234",  massNumber: 234, neutrons: 144, abundance: "Trace",    halfLife: "24.10 days",   spin: "0",   binding: 7.600, radioactive: true, decayMode: "β⁻", notes: "Member of uranium-238 decay chain. Used in uranium-series dating." },
+    { symbol: "²²⁶Th", name: "Thorium-226",  massNumber: 226, neutrons: 136, abundance: "Trace",    halfLife: "30.9 min",     spin: "0",   binding: 7.666, radioactive: true, decayMode: "α",  notes: "Short-lived; studied for targeted alpha therapy." },
+  ],
+  91: [
+    { symbol: "²³¹Pa", name: "Protactinium-231",  massNumber: 231, neutrons: 140, abundance: "Trace",     halfLife: "32760 years",  spin: "3/2", binding: 7.622, radioactive: true, decayMode: "α",  notes: "Most stable protactinium isotope. Used in Pa-U geochronology of oceans." },
+    { symbol: "²³³Pa", name: "Protactinium-233",  massNumber: 233, neutrons: 142, abundance: "Synthetic", halfLife: "26.967 days",  spin: "3/2", binding: 7.603, radioactive: true, decayMode: "β⁻", notes: "Parent of ²³³U. Key step in thorium fuel cycle." },
+    { symbol: "²³⁴Pa", name: "Protactinium-234",  massNumber: 234, neutrons: 143, abundance: "Trace",     halfLife: "6.70 h",       spin: "4",   binding: 7.589, radioactive: true, decayMode: "β⁻", notes: "Member of uranium-238 decay chain." },
+    { symbol: "²³⁴ᵐPa", name: "Protactinium-234m", massNumber: 234, neutrons: 143, abundance: "Trace",   halfLife: "1.17 min",     spin: "0",   binding: 7.589, radioactive: true, decayMode: "β⁻", notes: "Metastable isomer in uranium-238 chain. Shorter-lived than ground state." },
+    { symbol: "²³⁰Pa", name: "Protactinium-230",  massNumber: 230, neutrons: 139, abundance: "Synthetic", halfLife: "17.4 days",    spin: "2",   binding: 7.624, radioactive: true, decayMode: "β⁺, ε, α", notes: "Proton-rich synthetic protactinium." },
+  ],
+  92: [
+    { symbol: "²³⁴U",  name: "Uranium-234",   massNumber: 234, neutrons: 142, abundance: "0.0054%",   halfLife: "2.455×10⁵ yr", spin: "0",   binding: 7.601, radioactive: true, decayMode: "α",  notes: "Member of uranium-238 decay chain. Used in uranium-series dating." },
+    { symbol: "²³⁵U",  name: "Uranium-235",   massNumber: 235, neutrons: 143, abundance: "0.7204%",   halfLife: "7.04×10⁸ yr",  spin: "7/2", binding: 7.591, radioactive: true, decayMode: "α",  notes: "Only naturally fissile isotope. Fuel for most nuclear reactors and weapons." },
+    { symbol: "²³⁶U",  name: "Uranium-236",   massNumber: 236, neutrons: 144, abundance: "Trace",     halfLife: "2.342×10⁷ yr", spin: "0",   binding: 7.594, radioactive: true, decayMode: "α",  notes: "Produced in reactors from ²³⁵U neutron capture. Nuclear waste constituent." },
+    { symbol: "²³⁸U",  name: "Uranium-238",   massNumber: 238, neutrons: 146, abundance: "99.2742%",  halfLife: "4.468×10⁹ yr", spin: "0",   binding: 7.570, radioactive: true, decayMode: "α",  notes: "Most abundant uranium isotope. Primordial. Fertile material for plutonium production." },
+    { symbol: "²³³U",  name: "Uranium-233",   massNumber: 233, neutrons: 141, abundance: "Trace",     halfLife: "1.592×10⁵ yr", spin: "5/2", binding: 7.607, radioactive: true, decayMode: "α",  notes: "Fissile. Produced from ²³²Th in thorium fuel cycle. Used in some reactors." },
+    { symbol: "²³²U",  name: "Uranium-232",   massNumber: 232, neutrons: 140, abundance: "Trace",     halfLife: "68.9 years",   spin: "0",   binding: 7.615, radioactive: true, decayMode: "α",  notes: "Contaminant in ²³³U from thorium cycle; hard gamma from daughters complicates use." },
+    { symbol: "²³⁷U",  name: "Uranium-237",   massNumber: 237, neutrons: 145, abundance: "Synthetic", halfLife: "6.75 days",    spin: "1/2", binding: 7.575, radioactive: true, decayMode: "β⁻", notes: "Produced by neutron capture in reactor. Short-lived." },
+    { symbol: "²³⁹U",  name: "Uranium-239",   massNumber: 239, neutrons: 147, abundance: "Synthetic", halfLife: "23.45 min",    spin: "5/2", binding: 7.556, radioactive: true, decayMode: "β⁻", notes: "First product of ²³⁸U neutron capture. Decays to ²³⁹Np then ²³⁹Pu." },
+  ],
+  93: [
+    { symbol: "²³⁷Np", name: "Neptunium-237",  massNumber: 237, neutrons: 144, abundance: "Trace",     halfLife: "2.144×10⁶ yr", spin: "5/2", binding: 7.578, radioactive: true, decayMode: "α",      notes: "Most stable neptunium isotope. Accumulates in spent nuclear fuel. Head of the neptunium (4n+1) decay series." },
+    { symbol: "²³⁹Np", name: "Neptunium-239",  massNumber: 239, neutrons: 146, abundance: "Trace",     halfLife: "2.356 days",   spin: "5/2", binding: 7.558, radioactive: true, decayMode: "β⁻",     notes: "Produced by ²³⁸U neutron capture; decays to ²³⁹Pu. Key step in plutonium production in reactors." },
+    { symbol: "²³⁵Np", name: "Neptunium-235",  massNumber: 235, neutrons: 142, abundance: "Synthetic", halfLife: "396.1 days",   spin: "5/2", binding: 7.584, radioactive: true, decayMode: "ε",      notes: "Produced in reactors by proton-rich neutron activation pathways; decays to ²³⁵U by electron capture." },
+    { symbol: "²³⁶Np", name: "Neptunium-236",  massNumber: 236, neutrons: 143, abundance: "Synthetic", halfLife: "1.54×10⁵ yr", spin: "6",   binding: 7.574, radioactive: true, decayMode: "β⁻, ε",  notes: "Second longest-lived neptunium isotope. Of interest in long-term nuclear waste assessment." },
+    { symbol: "²³⁸Np", name: "Neptunium-238",  massNumber: 238, neutrons: 145, abundance: "Synthetic", halfLife: "2.117 days",   spin: "2",   binding: 7.563, radioactive: true, decayMode: "β⁻",     notes: "Reactor-produced; precursor used in ²³⁸Pu RTG fuel production chain." },
+  ],
+ 
+  94: [
+    { symbol: "²⁴⁴Pu", name: "Plutonium-244",  massNumber: 244, neutrons: 150, abundance: "Trace",     halfLife: "8.00×10⁷ yr", spin: "0",   binding: 7.533, radioactive: true, decayMode: "α",      notes: "Longest-lived plutonium isotope. Trace amounts found in nature. Primordial in some rare-earth ores." },
+    { symbol: "²³⁹Pu", name: "Plutonium-239",  massNumber: 239, neutrons: 145, abundance: "Synthetic", halfLife: "24110 years",  spin: "1/2", binding: 7.560, radioactive: true, decayMode: "α",      notes: "Primary fissile material in nuclear weapons and MOX reactor fuel. Produced from ²³⁸U neutron capture." },
+    { symbol: "²⁴⁰Pu", name: "Plutonium-240",  massNumber: 240, neutrons: 146, abundance: "Synthetic", halfLife: "6561 years",   spin: "0",   binding: 7.557, radioactive: true, decayMode: "α, SF",  notes: "Weapons-grade impurity; spontaneous fission makes it problematic for gun-type bombs." },
+    { symbol: "²³⁸Pu", name: "Plutonium-238",  massNumber: 238, neutrons: 144, abundance: "Synthetic", halfLife: "87.74 years",  spin: "0",   binding: 7.568, radioactive: true, decayMode: "α",      notes: "RTG fuel of choice for deep-space probes (Voyager, Cassini, New Horizons). ~0.5 W/g heat output." },
+    { symbol: "²⁴²Pu", name: "Plutonium-242",  massNumber: 242, neutrons: 148, abundance: "Synthetic", halfLife: "3.75×10⁵ yr", spin: "0",   binding: 7.545, radioactive: true, decayMode: "α",      notes: "Long-lived reactor by-product accumulating in spent fuel over multiple irradiation cycles." },
+    { symbol: "²⁴¹Pu", name: "Plutonium-241",  massNumber: 241, neutrons: 147, abundance: "Synthetic", halfLife: "14.329 years", spin: "5/2", binding: 7.543, radioactive: true, decayMode: "β⁻",     notes: "Fissile; decays to ²⁴¹Am in storage, building up americium contamination in aged plutonium." },
+  ],
+ 
+  95: [
+    { symbol: "²⁴³Am", name: "Americium-243",  massNumber: 243, neutrons: 148, abundance: "Synthetic", halfLife: "7370 years",   spin: "5/2", binding: 7.527, radioactive: true, decayMode: "α",      notes: "Longest-lived americium isotope. Used as neutron source when combined with beryllium." },
+    { symbol: "²⁴¹Am", name: "Americium-241",  massNumber: 241, neutrons: 146, abundance: "Synthetic", halfLife: "432.6 years",  spin: "5/2", binding: 7.536, radioactive: true, decayMode: "α",      notes: "Used in ionisation-type smoke detectors. FDA-approved ²⁴¹Am/²³⁷Np generator research ongoing." },
+    { symbol: "²⁴²ᵐAm", name: "Americium-242m", massNumber: 242, neutrons: 147, abundance: "Synthetic", halfLife: "141 years",   spin: "5",   binding: 7.522, radioactive: true, decayMode: "IT, α",  notes: "Metastable isomer; one of the highest known fission cross-sections (>6000 barns). Proposed space reactor fuel." },
+    { symbol: "²⁴²Am", name: "Americium-242",  massNumber: 242, neutrons: 147, abundance: "Synthetic", halfLife: "16.02 h",      spin: "1",   binding: 7.522, radioactive: true, decayMode: "β⁻, ε",  notes: "Ground state; produced by neutron capture on ²⁴¹Am. Short-lived; gateway to ²⁴²Cm production." },
+    { symbol: "²⁴⁰Am", name: "Americium-240",  massNumber: 240, neutrons: 145, abundance: "Synthetic", halfLife: "50.8 h",       spin: "3",   binding: 7.527, radioactive: true, decayMode: "ε",      notes: "Proton-rich synthetic americium isotope produced in accelerator bombardments." },
+  ],
+ 
+  96: [
+    { symbol: "²⁴⁷Cm", name: "Curium-247",    massNumber: 247, neutrons: 151, abundance: "Synthetic", halfLife: "1.56×10⁷ yr", spin: "9/2", binding: 7.498, radioactive: true, decayMode: "α",      notes: "Longest-lived curium isotope. Long enough half-life to be studied as a potential extinct radionuclide." },
+    { symbol: "²⁴⁸Cm", name: "Curium-248",    massNumber: 248, neutrons: 152, abundance: "Synthetic", halfLife: "3.48×10⁵ yr", spin: "0",   binding: 7.501, radioactive: true, decayMode: "α, SF",  notes: "Second longest-lived curium isotope. Spontaneous fission branch makes handling hazardous." },
+    { symbol: "²⁴⁵Cm", name: "Curium-245",    massNumber: 245, neutrons: 149, abundance: "Synthetic", halfLife: "8500 years",   spin: "7/2", binding: 7.512, radioactive: true, decayMode: "α",      notes: "Fissile isotope with large thermal neutron cross-section. Considered for long-lived waste transmutation." },
+    { symbol: "²⁴⁶Cm", name: "Curium-246",    massNumber: 246, neutrons: 150, abundance: "Synthetic", halfLife: "4706 years",   spin: "0",   binding: 7.508, radioactive: true, decayMode: "α, SF",  notes: "Significant spontaneous fission rate; a notable neutron source in aged curium samples." },
+    { symbol: "²⁴⁴Cm", name: "Curium-244",    massNumber: 244, neutrons: 148, abundance: "Synthetic", halfLife: "18.11 years",  spin: "0",   binding: 7.517, radioactive: true, decayMode: "α, SF",  notes: "Produced in high-fluence reactors. Used in RTGs and as a neutron source (with beryllium)." },
+    { symbol: "²⁴³Cm", name: "Curium-243",    massNumber: 243, neutrons: 147, abundance: "Synthetic", halfLife: "29.1 years",   spin: "5/2", binding: 7.515, radioactive: true, decayMode: "α, ε",   notes: "Relatively long-lived; produced by successive neutron capture. Contributes to reactor waste radiotoxicity." },
+    { symbol: "²⁴²Cm", name: "Curium-242",    massNumber: 242, neutrons: 146, abundance: "Synthetic", halfLife: "162.8 days",   spin: "0",   binding: 7.519, radioactive: true, decayMode: "α, SF",  notes: "First synthesised curium isotope (1944, Seaborg et al.). Intense alpha/neutron emitter." },
+  ],
+ 
+  97: [
+    { symbol: "²⁴⁷Bk", name: "Berkelium-247",  massNumber: 247, neutrons: 150, abundance: "Synthetic", halfLife: "1380 years",   spin: "3/2", binding: 7.491, radioactive: true, decayMode: "α",      notes: "Longest-lived berkelium isotope. Named after Berkeley, California, where it was first synthesised in 1949." },
+    { symbol: "²⁴⁹Bk", name: "Berkelium-249",  massNumber: 249, neutrons: 152, abundance: "Synthetic", halfLife: "327.2 days",   spin: "7/2", binding: 7.486, radioactive: true, decayMode: "β⁻, α",  notes: "Most commonly used berkelium isotope; extractable from reactor actinides in weighable quantities. Used as target to synthesise element 117 (tennessine)." },
+    { symbol: "²⁴⁸Bk", name: "Berkelium-248",  massNumber: 248, neutrons: 151, abundance: "Synthetic", halfLife: ">9 years",     spin: "1",   binding: 7.488, radioactive: true, decayMode: "α",      notes: "Lower limit on half-life; possibly longer-lived than ²⁴⁷Bk. Very difficult to produce in quantity." },
+    { symbol: "²⁴⁵Bk", name: "Berkelium-245",  massNumber: 245, neutrons: 148, abundance: "Synthetic", halfLife: "4.94 days",    spin: "3/2", binding: 7.497, radioactive: true, decayMode: "ε, α",   notes: "Produced by alpha bombardment of curium targets in cyclotrons." },
+    { symbol: "²⁴⁶Bk", name: "Berkelium-246",  massNumber: 246, neutrons: 149, abundance: "Synthetic", halfLife: "1.80 days",    spin: "2",   binding: 7.492, radioactive: true, decayMode: "ε, α",   notes: "Short-lived synthetic berkelium; studied in nuclear spectroscopy experiments." },
+  ],
+ 
+  98: [
+    { symbol: "²⁵¹Cf", name: "Californium-251", massNumber: 251, neutrons: 153, abundance: "Synthetic", halfLife: "898 years",    spin: "1/2", binding: 7.463, radioactive: true, decayMode: "α",      notes: "Longest-lived californium isotope. Fissile; highest known fission cross-section among actinides." },
+    { symbol: "²⁴⁹Cf", name: "Californium-249", massNumber: 249, neutrons: 151, abundance: "Synthetic", halfLife: "351 years",    spin: "9/2", binding: 7.469, radioactive: true, decayMode: "α",      notes: "Available isotopically pure from ²⁴⁹Bk decay. Used in neutron activation analysis and nuclear research." },
+    { symbol: "²⁵²Cf", name: "Californium-252", massNumber: 252, neutrons: 154, abundance: "Synthetic", halfLife: "2.645 years",  spin: "0",   binding: 7.461, radioactive: true, decayMode: "α, SF",  notes: "Most widely used californium isotope. Intense spontaneous-fission neutron source for well logging, cancer therapy, and reactor start-up." },
+    { symbol: "²⁵⁰Cf", name: "Californium-250", massNumber: 250, neutrons: 152, abundance: "Synthetic", halfLife: "13.08 years",  spin: "0",   binding: 7.464, radioactive: true, decayMode: "α, SF",  notes: "Reactor-produced; used in nuclear physics and as an alpha source in research." },
+    { symbol: "²⁴⁸Cf", name: "Californium-248", massNumber: 248, neutrons: 150, abundance: "Synthetic", halfLife: "333.5 days",   spin: "0",   binding: 7.473, radioactive: true, decayMode: "α, SF",  notes: "Produced by alpha bombardment of curium; building-block isotope in californium production chains." },
+  ],
+ 
+  99: [
+    { symbol: "²⁵²Es", name: "Einsteinium-252", massNumber: 252, neutrons: 153, abundance: "Synthetic", halfLife: "471.7 days",   spin: "5",   binding: 7.437, radioactive: true, decayMode: "α, ε",   notes: "Longest-lived einsteinium isotope. Difficult to produce; only minute quantities available. Better suited for physical property studies than ²⁵³Es." },
+    { symbol: "²⁵³Es", name: "Einsteinium-253", massNumber: 253, neutrons: 154, abundance: "Synthetic", halfLife: "20.47 days",   spin: "7/2", binding: 7.435, radioactive: true, decayMode: "α",      notes: "Most commonly studied einsteinium isotope. Produced in microgram quantities from californium decay in high-flux reactors. Discovered in debris of first thermonuclear test (Ivy Mike, 1952)." },
+    { symbol: "²⁵⁴Es", name: "Einsteinium-254", massNumber: 254, neutrons: 155, abundance: "Synthetic", halfLife: "275.7 days",   spin: "7+",  binding: 7.430, radioactive: true, decayMode: "α, SF",  notes: "Second longest-lived einsteinium isotope; difficult to accumulate due to competing decay paths." },
+    { symbol: "²⁵⁵Es", name: "Einsteinium-255", massNumber: 255, neutrons: 156, abundance: "Synthetic", halfLife: "39.8 days",    spin: "7/2", binding: 7.427, radioactive: true, decayMode: "β⁻, α",  notes: "Reactor-produced; used as a target material to synthesise heavier transuranic elements." },
+  ],
+ 
+  100: [
+    { symbol: "²⁵⁷Fm", name: "Fermium-257",    massNumber: 257, neutrons: 157, abundance: "Synthetic", halfLife: "100.5 days",   spin: "9/2", binding: 7.404, radioactive: true, decayMode: "α, SF",  notes: "Most stable fermium isotope. The heaviest element whose isotopes can be produced in macroscopic quantities via neutron capture in high-flux reactors." },
+    { symbol: "²⁵³Fm", name: "Fermium-253",    massNumber: 253, neutrons: 153, abundance: "Synthetic", halfLife: "3.00 days",    spin: "1/2", binding: 7.417, radioactive: true, decayMode: "ε, α",   notes: "Produced by decay of ²⁵³Es. Used in nuclear spectroscopy studies of heavy actinides." },
+    { symbol: "²⁵⁵Fm", name: "Fermium-255",    massNumber: 255, neutrons: 155, abundance: "Synthetic", halfLife: "20.07 h",      spin: "7/2", binding: 7.408, radioactive: true, decayMode: "α",      notes: "Reactor-produced fermium isotope. Fission barrier studies relevant to the island of stability." },
+    { symbol: "²⁵²Fm", name: "Fermium-252",    massNumber: 252, neutrons: 152, abundance: "Synthetic", halfLife: "25.39 h",      spin: "0",   binding: 7.413, radioactive: true, decayMode: "α, SF",  notes: "Discovered in thermonuclear test fallout; used to probe spontaneous fission systematics in the heavy actinides." },
+  ],
+ 
+  101: [
+    { symbol: "²⁵⁸Md", name: "Mendelevium-258", massNumber: 258, neutrons: 157, abundance: "Synthetic", halfLife: "51.5 days",    spin: "8",   binding: 7.381, radioactive: true, decayMode: "ε, α",   notes: "Longest-lived mendelevium isotope. Named after Dmitri Mendeleev. First element synthesised one-atom-at-a-time (1955)." },
+    { symbol: "²⁶⁰Md", name: "Mendelevium-260", massNumber: 260, neutrons: 159, abundance: "Synthetic", halfLife: "31.8 days",    spin: "—",   binding: 7.375, radioactive: true, decayMode: "SF, α, ε", notes: "Second longest-lived mendelevium isotope; notable spontaneous fission branch." },
+    { symbol: "²⁵⁷Md", name: "Mendelevium-257", massNumber: 257, neutrons: 156, abundance: "Synthetic", halfLife: "5.52 h",       spin: "7/2", binding: 7.382, radioactive: true, decayMode: "ε, α",   notes: "Accelerator-produced; studied for nuclear energy-level spectroscopy of odd-A heavy nuclides." },
+    { symbol: "²⁵⁶Md", name: "Mendelevium-256", massNumber: 256, neutrons: 155, abundance: "Synthetic", halfLife: "78.1 min",     spin: "—",   binding: 7.380, radioactive: true, decayMode: "ε",      notes: "First mendelevium isotope synthesised (1955, Berkeley); only 17 atoms produced in the initial experiment." },
+  ],
+ 
+  102: [
+    { symbol: "²⁵⁹No", name: "Nobelium-259",   massNumber: 259, neutrons: 157, abundance: "Synthetic", halfLife: "58 min",       spin: "9/2", binding: 7.356, radioactive: true, decayMode: "α, ε, SF", notes: "Longest-lived nobelium isotope. Named after Alfred Nobel. Chemistry performed in aqueous solution." },
+    { symbol: "²⁵⁵No", name: "Nobelium-255",   massNumber: 255, neutrons: 153, abundance: "Synthetic", halfLife: "3.1 min",      spin: "1/2", binding: 7.362, radioactive: true, decayMode: "α",      notes: "Most commonly used in chemistry experiments due to easier production scale despite shorter half-life." },
+    { symbol: "²⁵⁸No", name: "Nobelium-258",   massNumber: 258, neutrons: 156, abundance: "Synthetic", halfLife: "1.2 ms",       spin: "0",   binding: 7.349, radioactive: true, decayMode: "SF",     notes: "Undergoes rapid spontaneous fission; one of the clearest examples of the even-even SF trend in No isotopes." },
+    { symbol: "²⁵³No", name: "Nobelium-253",   massNumber: 253, neutrons: 151, abundance: "Synthetic", halfLife: "1.62 min",     spin: "9/2", binding: 7.364, radioactive: true, decayMode: "α, ε",   notes: "Produced in cyclotron bombardments; used to establish nobelium's +2 aqueous oxidation state chemistry." },
+  ],
+ 
+  103: [
+    { symbol: "²⁶⁶Lr", name: "Lawrencium-266", massNumber: 266, neutrons: 163, abundance: "Synthetic", halfLife: "11 h",         spin: "—",   binding: 7.316, radioactive: true, decayMode: "α, SF",  notes: "Longest-lived lawrencium isotope. Named after Ernest O. Lawrence. Confirmed trivalent behaviour in aqueous chemistry." },
+    { symbol: "²⁶⁰Lr", name: "Lawrencium-260", massNumber: 260, neutrons: 157, abundance: "Synthetic", halfLife: "2.7 min",      spin: "—",   binding: 7.328, radioactive: true, decayMode: "α",      notes: "Most commonly used in chemistry; larger production scale enables solution chemistry studies." },
+    { symbol: "²⁶²Lr", name: "Lawrencium-262", massNumber: 262, neutrons: 159, abundance: "Synthetic", halfLife: "3.6 h",        spin: "—",   binding: 7.322, radioactive: true, decayMode: "SF, α",  notes: "Relatively long-lived; used to study lawrencium's position as the last actinide vs. first transition metal." },
+    { symbol: "²⁵⁹Lr", name: "Lawrencium-259", massNumber: 259, neutrons: 156, abundance: "Synthetic", halfLife: "6.2 s",        spin: "—",   binding: 7.328, radioactive: true, decayMode: "α",      notes: "Produced by bombardment of californium with boron ions. Used in nuclear spectroscopy." },
+  ],
+ 
+  104: [
+    { symbol: "²⁶⁷Rf", name: "Rutherfordium-267", massNumber: 267, neutrons: 163, abundance: "Synthetic", halfLife: "~48 min",    spin: "—",   binding: 7.280, radioactive: true, decayMode: "SF",     notes: "Longest-lived rutherfordium isotope. Named after Ernest Rutherford. Behaves chemically like hafnium (group 4)." },
+    { symbol: "²⁶⁵Rf", name: "Rutherfordium-265", massNumber: 265, neutrons: 161, abundance: "Synthetic", halfLife: "~1.1 min",   spin: "—",   binding: 7.282, radioactive: true, decayMode: "SF",     notes: "Produced in decay chain of ²⁷³Ds and directly. Used in chemical separation studies." },
+    { symbol: "²⁶³Rf", name: "Rutherfordium-263", massNumber: 263, neutrons: 159, abundance: "Synthetic", halfLife: "~11 min",    spin: "—",   binding: 7.282, radioactive: true, decayMode: "SF, α",  notes: "Observed in decay chain studies; nuclear structure near the deformed shell closure N=162." },
+    { symbol: "²⁶¹Rf", name: "Rutherfordium-261", massNumber: 261, neutrons: 157, abundance: "Synthetic", halfLife: "68 s",       spin: "—",   binding: 7.285, radioactive: true, decayMode: "SF, α",  notes: "Among first rutherfordium isotopes studied in single-atom chemistry experiments." },
+  ],
+ 
+  105: [
+    { symbol: "²⁶⁸Db", name: "Dubnium-268",    massNumber: 268, neutrons: 163, abundance: "Synthetic", halfLife: "16 h",         spin: "—",   binding: 7.253, radioactive: true, decayMode: "α, SF",  notes: "Longest-lived dubnium isotope. Named after Dubna, Russia. Appears in decay chain of ²⁸⁸Mc." },
+    { symbol: "²⁶⁷Db", name: "Dubnium-267",    massNumber: 267, neutrons: 162, abundance: "Synthetic", halfLife: "1.4 h",        spin: "—",   binding: 7.254, radioactive: true, decayMode: "SF",     notes: "Second longest-lived dubnium isotope; observed in ²⁸⁷Mc decay chain." },
+    { symbol: "²⁶³Db", name: "Dubnium-263",    massNumber: 263, neutrons: 158, abundance: "Synthetic", halfLife: "~27 s",        spin: "—",   binding: 7.255, radioactive: true, decayMode: "SF, α",  notes: "Produced in ²⁷¹Bh decay chain; used in eluting chromatography studies of dubnium chemistry." },
+    { symbol: "²⁶²Db", name: "Dubnium-262",    massNumber: 262, neutrons: 157, abundance: "Synthetic", halfLife: "34 s",         spin: "—",   binding: 7.254, radioactive: true, decayMode: "SF, α",  notes: "Directly synthesised; among the first dubnium isotopes characterised chemically, showing group-5 behaviour." },
+  ],
+ 
+  106: [
+    { symbol: "²⁷¹Sg", name: "Seaborgium-271", massNumber: 271, neutrons: 165, abundance: "Synthetic", halfLife: "~2.4 min",     spin: "—",   binding: 7.224, radioactive: true, decayMode: "α",      notes: "Longest-lived seaborgium isotope. Named after Glenn T. Seaborg. Confirmed as a group-6 congener of tungsten." },
+    { symbol: "²⁶⁹Sg", name: "Seaborgium-269", massNumber: 269, neutrons: 163, abundance: "Synthetic", halfLife: "~3.1 min",     spin: "—",   binding: 7.225, radioactive: true, decayMode: "α",      notes: "Appears in ²⁸⁵Fl decay chain; contributes to knowledge of the N=163 deformed shell." },
+    { symbol: "²⁶⁵Sg", name: "Seaborgium-265", massNumber: 265, neutrons: 159, abundance: "Synthetic", halfLife: "~8.9 s",       spin: "—",   binding: 7.224, radioactive: true, decayMode: "α",      notes: "Used in on-line chemical separation experiments confirming seaborgium's group-6 periodic table placement." },
+    { symbol: "²⁶³Sg", name: "Seaborgium-263", massNumber: 263, neutrons: 157, abundance: "Synthetic", halfLife: "~0.9 s",       spin: "—",   binding: 7.222, radioactive: true, decayMode: "SF",     notes: "Early isotope used in seaborgium discovery verification at LBNL and GSI." },
+  ],
+ 
+  107: [
+    { symbol: "²⁶⁷Bh", name: "Bohrium-267",    massNumber: 267, neutrons: 160, abundance: "Synthetic", halfLife: "~17 s",        spin: "—",   binding: 7.203, radioactive: true, decayMode: "α",      notes: "Longest-lived bohrium isotope. Named after Niels Bohr. First synthesised at GSI, Darmstadt (1981)." },
+    { symbol: "²⁷⁰Bh", name: "Bohrium-270",    massNumber: 270, neutrons: 163, abundance: "Synthetic", halfLife: "~61 s",        spin: "—",   binding: 7.205, radioactive: true, decayMode: "α",      notes: "Produced in the ²⁷⁸Nh decay chain; one of the longer-lived bohrium isotopes known." },
+    { symbol: "²⁶⁵Bh", name: "Bohrium-265",    massNumber: 265, neutrons: 158, abundance: "Synthetic", halfLife: "~0.9 s",       spin: "—",   binding: 7.200, radioactive: true, decayMode: "α",      notes: "Used in chemical studies verifying bohrium's group-7 (rhenium homolog) periodic table behaviour." },
+    { symbol: "²⁶⁴Bh", name: "Bohrium-264",    massNumber: 264, neutrons: 157, abundance: "Synthetic", halfLife: "~0.97 s",      spin: "—",   binding: 7.198, radioactive: true, decayMode: "α",      notes: "Early directly synthesised bohrium isotope; nuclear spectroscopy target." },
+  ],
+ 
+  108: [
+    { symbol: "²⁷⁷Hs", name: "Hassium-277",    massNumber: 277, neutrons: 169, abundance: "Synthetic", halfLife: "~12 min",      spin: "—",   binding: 7.169, radioactive: true, decayMode: "α",      notes: "Longest-lived known hassium isotope. Named after Hesse, Germany. Appears in decay chain of ²⁸⁵Fl." },
+    { symbol: "²⁶⁹Hs", name: "Hassium-269",    massNumber: 269, neutrons: 161, abundance: "Synthetic", halfLife: "~9.7 s",       spin: "—",   binding: 7.170, radioactive: true, decayMode: "α",      notes: "First synthesised at GSI (1984). Chemical studies confirmed hassium's group-8 (osmium homolog) behaviour." },
+    { symbol: "²⁷⁰Hs", name: "Hassium-270",    massNumber: 270, neutrons: 162, abundance: "Synthetic", halfLife: "~3.6 s",       spin: "0",   binding: 7.172, radioactive: true, decayMode: "α",      notes: "Produced from ²⁷⁸Nh decay chain and directly. Doubly magic-adjacent even-even nucleus studied for shell effects." },
+    { symbol: "²⁷¹Hs", name: "Hassium-271",    massNumber: 271, neutrons: 163, abundance: "Synthetic", halfLife: "~4 s",         spin: "—",   binding: 7.169, radioactive: true, decayMode: "α",      notes: "Odd-A hassium isotope; nuclear level structure studied in decay spectroscopy experiments." },
+  ],
+ 
+  109: [
+    { symbol: "²⁷⁶Mt", name: "Meitnerium-276", massNumber: 276, neutrons: 167, abundance: "Synthetic", halfLife: "~0.72 s",      spin: "—",   binding: 7.140, radioactive: true, decayMode: "α",      notes: "Longest-lived meitnerium isotope. Named after Lise Meitner. First synthesised at GSI (1982). No chemistry performed due to very short half-lives." },
+    { symbol: "²⁷⁸Mt", name: "Meitnerium-278", massNumber: 278, neutrons: 169, abundance: "Synthetic", halfLife: "~4.5 s",       spin: "—",   binding: 7.140, radioactive: true, decayMode: "α",      notes: "Observed in ²⁸⁶Cn and ²⁹⁴Og decay chains; among the more accessible meitnerium isotopes for study." },
+    { symbol: "²⁷⁴Mt", name: "Meitnerium-274", massNumber: 274, neutrons: 165, abundance: "Synthetic", halfLife: "~0.44 s",      spin: "—",   binding: 7.136, radioactive: true, decayMode: "α",      notes: "Directly synthesised and observed in decay chains of heavier superheavy elements." },
+  ],
+ 
+  110: [
+    { symbol: "²⁸¹Ds", name: "Darmstadtium-281", massNumber: 281, neutrons: 171, abundance: "Synthetic", halfLife: "~11.1 s",    spin: "—",   binding: 7.112, radioactive: true, decayMode: "SF, α",  notes: "Longest-lived darmstadtium isotope. Named after Darmstadt, Germany. First synthesised at GSI (1994). Group-10 congener of platinum." },
+    { symbol: "²⁷⁹Ds", name: "Darmstadtium-279", massNumber: 279, neutrons: 169, abundance: "Synthetic", halfLife: "~0.18 s",    spin: "—",   binding: 7.108, radioactive: true, decayMode: "α",      notes: "Produced in direct synthesis and in ²⁸⁷Mc decay. Studied in nuclear decay spectroscopy." },
+    { symbol: "²⁷⁷Ds", name: "Darmstadtium-277", massNumber: 277, neutrons: 167, abundance: "Synthetic", halfLife: "~3.5 ms",    spin: "—",   binding: 7.105, radioactive: true, decayMode: "α",      notes: "Early directly synthesised Ds isotope from Ni + Pb fusion reactions at GSI." },
+  ],
+ 
+  111: [
+    { symbol: "²⁸¹Rg", name: "Roentgenium-281", massNumber: 281, neutrons: 170, abundance: "Synthetic", halfLife: "~26 s",       spin: "—",   binding: 7.085, radioactive: true, decayMode: "α",      notes: "Longest-lived roentgenium isotope. Named after Wilhelm Röntgen. First synthesised at GSI (1994). Group-11 congener of gold." },
+    { symbol: "²⁸³Rg", name: "Roentgenium-283", massNumber: 283, neutrons: 172, abundance: "Synthetic", halfLife: "~5.1 s",      spin: "—",   binding: 7.088, radioactive: true, decayMode: "α",      notes: "Observed in ²⁹¹Mc and ²⁸⁷Nh decay chains. Contributes to nuclear structure knowledge at N=172." },
+    { symbol: "²⁷⁹Rg", name: "Roentgenium-279", massNumber: 279, neutrons: 168, abundance: "Synthetic", halfLife: "~0.17 s",     spin: "—",   binding: 7.080, radioactive: true, decayMode: "α",      notes: "Directly synthesised from Bi + Ni bombardments; among the first Rg isotopes characterised." },
+  ],
+ 
+  112: [
+    { symbol: "²⁸⁵Cn", name: "Copernicium-285", massNumber: 285, neutrons: 173, abundance: "Synthetic", halfLife: "~29 s",       spin: "—",   binding: 7.062, radioactive: true, decayMode: "α",      notes: "Longest-lived copernicium isotope. Named after Nicolaus Copernicus. First synthesised at GSI (1996). Predicted to behave like a noble gas due to relativistic effects." },
+    { symbol: "²⁸³Cn", name: "Copernicium-283", massNumber: 283, neutrons: 171, abundance: "Synthetic", halfLife: "~4 s",        spin: "—",   binding: 7.059, radioactive: true, decayMode: "α, SF",  notes: "Appears in ²⁹¹Mc decay chain. Used in gas-phase adsorption experiments probing Cn's noble-gas-like character." },
+    { symbol: "²⁸⁶Cn", name: "Copernicium-286", massNumber: 286, neutrons: 174, abundance: "Synthetic", halfLife: "~8.45 s",     spin: "0",   binding: 7.063, radioactive: true, decayMode: "SF",     notes: "Even-even isotope; dominantly undergoes spontaneous fission. Important for understanding shell closures." },
+  ],
+ 
+  113: [
+    { symbol: "²⁸⁴Nh", name: "Nihonium-284",   massNumber: 284, neutrons: 171, abundance: "Synthetic", halfLife: "~0.48 s",     spin: "—",   binding: 7.034, radioactive: true, decayMode: "α",      notes: "Longest-lived nihonium isotope. Named after Japan (Nihon). First synthesised at RIKEN, Japan (2004). Officially confirmed element 113." },
+    { symbol: "²⁸⁶Nh", name: "Nihonium-286",   massNumber: 286, neutrons: 173, abundance: "Synthetic", halfLife: "~9.5 s",      spin: "—",   binding: 7.038, radioactive: true, decayMode: "α",      notes: "Produced in ²⁹⁴Ts decay chain. Longer-lived than directly synthesised Nh isotopes." },
+    { symbol: "²⁸²Nh", name: "Nihonium-282",   massNumber: 282, neutrons: 169, abundance: "Synthetic", halfLife: "~73 ms",      spin: "—",   binding: 7.030, radioactive: true, decayMode: "α",      notes: "Directly synthesised; used to establish the discovery claim of element 113 at RIKEN." },
+  ],
+ 
+  114: [
+    { symbol: "²⁸⁹Fl", name: "Flerovium-289",  massNumber: 289, neutrons: 175, abundance: "Synthetic", halfLife: "~2.65 s",     spin: "—",   binding: 7.016, radioactive: true, decayMode: "α",      notes: "Longest-lived flerovium isotope. Named after Flerov Laboratory, Dubna. First synthesised 1999. Predicted island-of-stability candidate near Z=114, N=184." },
+    { symbol: "²⁸⁷Fl", name: "Flerovium-287",  massNumber: 287, neutrons: 173, abundance: "Synthetic", halfLife: "~0.51 s",     spin: "—",   binding: 7.012, radioactive: true, decayMode: "α",      notes: "Produced in ²⁹⁵Mc decay chain. Gas-phase chemistry experiments attempted to probe Fl's chemical properties." },
+    { symbol: "²⁸⁵Fl", name: "Flerovium-285",  massNumber: 285, neutrons: 171, abundance: "Synthetic", halfLife: "~0.10 s",     spin: "—",   binding: 7.008, radioactive: true, decayMode: "α",      notes: "Directly synthesised; among the first flerovium isotopes fully characterised in decay-chain studies." },
+    { symbol: "²⁸⁸Fl", name: "Flerovium-288",  massNumber: 288, neutrons: 174, abundance: "Synthetic", halfLife: "~0.69 s",     spin: "0",   binding: 7.013, radioactive: true, decayMode: "α",      notes: "Even-even isotope; studied in the context of Z=114 proton shell closure predictions." },
+  ],
+ 
+  115: [
+    { symbol: "²⁸⁹Mc", name: "Moscovium-289",  massNumber: 289, neutrons: 174, abundance: "Synthetic", halfLife: "~87 ms",      spin: "—",   binding: 6.988, radioactive: true, decayMode: "α",      notes: "Longest-lived moscovium isotope. Named after Moscow Oblast. First synthesised at FLNR, Dubna (2003). Confirmed by IUPAC 2016." },
+    { symbol: "²⁹⁰Mc", name: "Moscovium-290",  massNumber: 290, neutrons: 175, abundance: "Synthetic", halfLife: "~16 ms",      spin: "—",   binding: 6.990, radioactive: true, decayMode: "α",      notes: "Produced by ²⁴⁸Cm + ⁴⁸Ca reactions. Contributes to the characterisation of the heaviest known odd-Z elements." },
+    { symbol: "²⁸⁷Mc", name: "Moscovium-287",  massNumber: 287, neutrons: 172, abundance: "Synthetic", halfLife: "~37 ms",      spin: "—",   binding: 6.984, radioactive: true, decayMode: "α",      notes: "Observed in several heavy-element bombardment experiments. Decay chain passes through Nh and Rg isotopes." },
+    { symbol: "²⁸⁸Mc", name: "Moscovium-288",  massNumber: 288, neutrons: 173, abundance: "Synthetic", halfLife: "~164 ms",     spin: "—",   binding: 6.986, radioactive: true, decayMode: "α",      notes: "Synthesised at FLNR and GSI; feeds into ²⁸⁴Nh and beyond in the Mc decay chain." },
+  ],
+ 
+  116: [
+    { symbol: "²⁹³Lv", name: "Livermorium-293", massNumber: 293, neutrons: 177, abundance: "Synthetic", halfLife: "~57 ms",      spin: "—",   binding: 6.965, radioactive: true, decayMode: "α",      notes: "Longest-lived livermorium isotope. Named after Lawrence Livermore National Laboratory. First synthesised at FLNR (2000). Confirmed by IUPAC 2012." },
+    { symbol: "²⁹¹Lv", name: "Livermorium-291", massNumber: 291, neutrons: 175, abundance: "Synthetic", halfLife: "~19 ms",      spin: "—",   binding: 6.961, radioactive: true, decayMode: "α",      notes: "Produced in ²⁴⁸Cm + ⁴⁸Ca bombardments; probes nuclear structure near Z=114 and N=172 shell gaps." },
+    { symbol: "²⁹²Lv", name: "Livermorium-292", massNumber: 292, neutrons: 176, abundance: "Synthetic", halfLife: "~18 ms",      spin: "0",   binding: 6.962, radioactive: true, decayMode: "α",      notes: "Even-even isotope; its relatively fast alpha decay tests theoretical predictions of Z=114 shell closure." },
+    { symbol: "²⁹⁰Lv", name: "Livermorium-290", massNumber: 290, neutrons: 174, abundance: "Synthetic", halfLife: "~8 ms",       spin: "0",   binding: 6.959, radioactive: true, decayMode: "α",      notes: "Observed in ²⁹⁸Og decay chain experiments at Dubna and GSI." },
+  ],
+ 
+  117: [
+    { symbol: "²⁹⁴Ts", name: "Tennessine-294",  massNumber: 294, neutrons: 177, abundance: "Synthetic", halfLife: "~51 ms",      spin: "—",   binding: 6.944, radioactive: true, decayMode: "α",      notes: "Longest-lived tennessine isotope. Named after Tennessee. First synthesised at FLNR, Dubna using ²⁴⁹Bk target (2010). Confirmed by IUPAC 2016." },
+    { symbol: "²⁹³Ts", name: "Tennessine-293",  massNumber: 293, neutrons: 176, abundance: "Synthetic", halfLife: "~14 ms",      spin: "—",   binding: 6.942, radioactive: true, decayMode: "α",      notes: "Second tennessine isotope characterised; produced from ²⁴⁹Bk + ⁴⁸Ca bombardments alongside ²⁹⁴Ts." },
+  ],
+ 
+  118: [
+    { symbol: "²⁹⁴Og", name: "Oganesson-294",   massNumber: 294, neutrons: 176, abundance: "Synthetic", halfLife: "~0.69 ms",    spin: "0",   binding: 6.921, radioactive: true, decayMode: "α",      notes: "Only known oganesson isotope with confirmed observations. Named after Yuri Oganessian. First synthesised at FLNR, Dubna (2002). Heaviest and last element in the periodic table. Predicted to have unusual noble-gas-like or possibly solid properties due to extreme relativistic effects." },
+  ],
 };
-
-const GROUPS_FILTER = [
-  { id: "all", label: "All Elements" },
-  { id: "alkali metal", label: "Alkali Metals" },
-  { id: "alkaline earth metal", label: "Alkaline Earth" },
-  { id: "transition metal", label: "Transition Metals" },
-  { id: "post-transition metal", label: "Post-Transition" },
-  { id: "metalloid", label: "Metalloids" },
-  { id: "nonmetal", label: "Nonmetals" },
-  { id: "halogen", label: "Halogens" },
-  { id: "noble gas", label: "Noble Gases" },
-  { id: "lanthanide", label: "Lanthanides" },
-  { id: "actinide", label: "Actinides" },
-];
-
-function AtomicAnimation({ element, dark }) {
-  const canvasRef = useRef(null);
-  const animRef = useRef(null);
-  const timeRef = useRef(0);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const W = canvas.width;
-    const H = canvas.height;
-    const cx = W / 2;
-    const cy = H / 2;
-
-    const shells = element.shells || [element.electrons];
-    const maxShell = shells.length;
-    const baseRadius = Math.min(W, H) * 0.12;
-    const shellGap = Math.min(W, H) * 0.1;
-    const electronPositions = shells.map((count, i) => {
-      const r = baseRadius + i * shellGap;
-      return Array.from({ length: Math.min(count, 12) }, (_, j) => ({
-        angle: (j / Math.min(count, 12)) * Math.PI * 2,
-        speed: (0.3 + Math.random() * 0.4) * (i % 2 === 0 ? 1 : -1) / (i + 1),
-        r,
-      }));
-    });
-
-    const catColor = CATEGORY_COLORS[element.category];
-    const glowColor = catColor ? catColor.light : "#6bcb77";
-
-    function draw(t) {
-      ctx.clearRect(0, 0, W, H);
-
-      // Background glow
-      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.5);
-      bgGrad.addColorStop(0, dark ? "rgba(30,30,50,0.8)" : "rgba(240,240,255,0.8)");
-      bgGrad.addColorStop(1, dark ? "rgba(10,10,20,0)" : "rgba(255,255,255,0)");
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, W, H);
-
-      // Draw shells
-      electronPositions.forEach((shell, i) => {
-        const r = baseRadius + i * shellGap;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.strokeStyle = dark ? `rgba(255,255,255,0.12)` : `rgba(0,0,100,0.08)`;
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 8]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      });
-
-      // Nucleus
-      const nucGrad = ctx.createRadialGradient(cx - 4, cy - 4, 0, cx, cy, baseRadius * 0.7);
-      nucGrad.addColorStop(0, "#fff");
-      nucGrad.addColorStop(0.3, glowColor);
-      nucGrad.addColorStop(1, dark ? "#1a1a3e" : "#4444cc");
-      ctx.beginPath();
-      ctx.arc(cx, cy, baseRadius * 0.55, 0, Math.PI * 2);
-      ctx.fillStyle = nucGrad;
-      ctx.fill();
-
-      // Nucleus glow
-      ctx.beginPath();
-      ctx.arc(cx, cy, baseRadius * 0.7, 0, Math.PI * 2);
-      const nGlow = ctx.createRadialGradient(cx, cy, baseRadius * 0.4, cx, cy, baseRadius * 0.9);
-      nGlow.addColorStop(0, glowColor + "66");
-      nGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = nGlow;
-      ctx.fill();
-
-      // Nucleus text
-      ctx.fillStyle = "#fff";
-      ctx.font = `bold ${Math.max(10, baseRadius * 0.5)}px monospace`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(element.symbol, cx, cy);
-
-      // Draw electrons
-      electronPositions.forEach((shell, si) => {
-        shell.forEach((e, ei) => {
-          const a = e.angle + t * e.speed;
-          const ex = cx + Math.cos(a) * e.r;
-          const ey = cy + Math.sin(a) * e.r;
-
-          // Electron glow trail
-          const trailLen = 8;
-          for (let tr = 0; tr < trailLen; tr++) {
-            const ta = a - (tr * 0.15 * Math.sign(e.speed));
-            const tx = cx + Math.cos(ta) * e.r;
-            const ty = cy + Math.sin(ta) * e.r;
-            ctx.beginPath();
-            ctx.arc(tx, ty, 3 * (1 - tr / trailLen), 0, Math.PI * 2);
-            ctx.fillStyle = glowColor + Math.floor((1 - tr / trailLen) * 60).toString(16).padStart(2, "0");
-            ctx.fill();
-          }
-
-          // Electron
-          const eGrad = ctx.createRadialGradient(ex - 1, ey - 1, 0, ex, ey, 5);
-          eGrad.addColorStop(0, "#ffffff");
-          eGrad.addColorStop(0.4, glowColor);
-          eGrad.addColorStop(1, glowColor + "00");
-          ctx.beginPath();
-          ctx.arc(ex, ey, 5, 0, Math.PI * 2);
-          ctx.fillStyle = eGrad;
-          ctx.fill();
-        });
-      });
-
-      // Protons & neutrons count
-      ctx.fillStyle = dark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
-      ctx.font = "10px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(`${element.protons}p  ${element.neutrons}n`, cx, cy + baseRadius * 0.72 + 12);
-    }
-
-    function loop() {
-      timeRef.current += 0.016;
-      draw(timeRef.current);
-      animRef.current = requestAnimationFrame(loop);
-    }
-    loop();
-
-    return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-    };
-  }, [element, dark]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      width={280}
-      height={280}
-      style={{ width: "100%", maxWidth: "280px", display: "block", margin: "0 auto" }}
-    />
-  );
-}
-
-function PropertyBar({ label, value, max, unit, color }) {
-  const pct = Math.min(100, (value / max) * 100);
-  return (
-    <div style={{ marginBottom: "10px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "3px", opacity: 0.75 }}>
-        <span>{label}</span>
-        <span style={{ fontWeight: 600 }}>{value !== null && value !== undefined ? `${value}${unit || ""}` : "N/A"}</span>
-      </div>
-      <div style={{ height: "5px", background: "rgba(128,128,128,0.2)", borderRadius: "3px", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: color || "#6bcb77", borderRadius: "3px", transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)" }} />
-      </div>
-    </div>
-  );
-}
-
-function ElementModal({ element, onClose, dark }) {
-  const [activeTab, setActiveTab] = useState("overview");
-  const catColor = CATEGORY_COLORS[element.category] || { light: "#6bcb77", dark: "#4caf50" };
-  const accent = dark ? catColor.dark : catColor.light;
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
-
-  const tabs = ["overview", "properties", "bonds", "history"];
-
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, zIndex: 1000,
-        background: dark ? "rgba(0,0,0,0.85)" : "rgba(0,0,30,0.65)",
-        backdropFilter: "blur(12px)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "16px",
-        animation: "fadeIn 0.25s ease",
-      }}
-    >
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: "100%", maxWidth: "780px", maxHeight: "90vh",
-          background: dark ? "#0f0f1a" : "#f8f8ff",
-          borderRadius: "20px",
-          border: `1px solid ${accent}44`,
-          overflow: "hidden",
-          display: "flex", flexDirection: "column",
-          animation: "slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1)",
-          boxShadow: `0 0 60px ${accent}33, 0 30px 80px rgba(0,0,0,0.5)`,
-        }}
-      >
-        {/* Header */}
-        <div style={{
-          padding: "24px 28px 0",
-          background: `linear-gradient(135deg, ${accent}22 0%, transparent 60%)`,
-          borderBottom: `1px solid ${accent}33`,
-          flexShrink: 0,
-        }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "20px", marginBottom: "16px" }}>
-            <div style={{
-              width: "80px", height: "80px", borderRadius: "16px",
-              background: `linear-gradient(135deg, ${accent}33, ${accent}11)`,
-              border: `2px solid ${accent}66`,
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <div style={{ fontSize: "9px", opacity: 0.6 }}>{element.number}</div>
-              <div style={{ fontSize: "32px", fontWeight: 700, lineHeight: 1, color: accent }}>{element.symbol}</div>
-              <div style={{ fontSize: "8px", opacity: 0.5 }}>{element.mass.toFixed(2)}</div>
-            </div>
-            <div style={{ flex: 1 }}>
-              <h2 style={{ margin: 0, fontSize: "26px", fontWeight: 700, color: dark ? "#fff" : "#111" }}>{element.name}</h2>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "6px" }}>
-                <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "20px", background: accent + "33", color: accent, fontWeight: 600 }}>
-                  {catColor.label}
-                </span>
-                <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "20px", background: dark ? "#ffffff11" : "#00000011", color: dark ? "#aaa" : "#555" }}>
-                  Period {element.period} · Group {element.group}
-                </span>
-                <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "20px", background: dark ? "#ffffff11" : "#00000011", color: dark ? "#aaa" : "#555" }}>
-                  {element.phase}
-                </span>
-              </div>
-              <p style={{ margin: "10px 0 0", fontSize: "13px", opacity: 0.65, lineHeight: 1.5 }}>{element.description}</p>
-            </div>
-            <button
-              onClick={onClose}
-              style={{
-                width: "32px", height: "32px", borderRadius: "50%",
-                background: dark ? "#ffffff15" : "#00000010",
-                border: "none", cursor: "pointer",
-                color: dark ? "#fff" : "#333",
-                fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >×</button>
-          </div>
-
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: "4px" }}>
-            {tabs.map(t => (
-              <button key={t} onClick={() => setActiveTab(t)} style={{
-                padding: "8px 16px", fontSize: "12px", fontWeight: 600,
-                border: "none", borderRadius: "8px 8px 0 0",
-                cursor: "pointer", textTransform: "capitalize",
-                background: activeTab === t ? (dark ? "#0f0f1a" : "#f8f8ff") : "transparent",
-                color: activeTab === t ? accent : (dark ? "#666" : "#999"),
-                borderBottom: activeTab === t ? `2px solid ${accent}` : "2px solid transparent",
-                transition: "all 0.2s",
-              }}>{t}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div style={{ overflowY: "auto", flex: 1, padding: "24px 28px" }}>
-          {activeTab === "overview" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-              <div>
-                <AtomicAnimation element={element} dark={dark} />
-                <div style={{ marginTop: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                  {[
-                    { l: "Protons", v: element.protons },
-                    { l: "Neutrons", v: element.neutrons },
-                    { l: "Electrons", v: element.electrons },
-                    { l: "Valence e⁻", v: element.valence },
-                  ].map(({ l, v }) => (
-                    <div key={l} style={{ padding: "10px", borderRadius: "10px", background: dark ? "#ffffff08" : "#00000006", textAlign: "center" }}>
-                      <div style={{ fontSize: "18px", fontWeight: 700, color: accent }}>{v}</div>
-                      <div style={{ fontSize: "10px", opacity: 0.5 }}>{l}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "12px", opacity: 0.5, textTransform: "uppercase", letterSpacing: "1px" }}>Key Properties</div>
-                {[
-                  { label: "Atomic Mass", value: `${element.mass} u` },
-                  { label: "Electronegativity", value: element.electronegativity ?? "N/A" },
-                  { label: "Atomic Radius", value: element.radius ? `${element.radius} pm` : "N/A" },
-                  { label: "Electron Config", value: element.electronConfig },
-                  { label: "Oxidation States", value: element.oxidationStates },
-                  { label: "Phase (STP)", value: element.phase },
-                  { label: "Discovered", value: element.discovered < 0 ? `${Math.abs(element.discovered)} BC` : element.discovered },
-                  { label: "Crystal Structure", value: element.crystalStructure },
-                  { label: "Magnetism", value: element.magnetism },
-                  { label: "Abundance", value: element.abundance },
-                ].map(({ label, value }) => (
-                  <div key={label} style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    padding: "8px 0", borderBottom: `1px solid ${dark ? "#ffffff08" : "#00000008"}`,
-                    fontSize: "13px",
-                  }}>
-                    <span style={{ opacity: 0.6 }}>{label}</span>
-                    <span style={{ fontWeight: 500, textAlign: "right", maxWidth: "55%" }}>{value}</span>
-                  </div>
-                ))}
-
-                {/* Electron shells visualization */}
-                <div style={{ marginTop: "16px" }}>
-                  <div style={{ fontSize: "12px", opacity: 0.5, marginBottom: "8px" }}>Electron Shells</div>
-                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                    {(element.shells || [element.electrons]).map((count, i) => (
-                      <div key={i} style={{ textAlign: "center" }}>
-                        <div style={{
-                          width: "36px", height: "36px", borderRadius: "50%",
-                          border: `2px solid ${accent}66`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: "14px", fontWeight: 700, color: accent,
-                        }}>{count}</div>
-                        <div style={{ fontSize: "9px", opacity: 0.4, marginTop: "3px" }}>n={i + 1}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "properties" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "16px", opacity: 0.5, textTransform: "uppercase", letterSpacing: "1px" }}>Thermal & Physical</div>
-                <PropertyBar label="Melting Point" value={element.meltingPoint} max={4000} unit="°C" color={accent} />
-                <PropertyBar label="Boiling Point" value={element.boilingPoint} max={5000} unit="°C" color={accent} />
-                <PropertyBar label="Density" value={element.density} max={25} unit=" g/cm³" color={accent} />
-                {element.hardness && <PropertyBar label="Hardness (Mohs)" value={element.hardness} max={10} unit="" color={accent} />}
-
-                <div style={{ marginTop: "20px", padding: "16px", borderRadius: "12px", background: dark ? "#ffffff06" : "#00000004", border: `1px solid ${accent}22` }}>
-                  <div style={{ fontSize: "12px", opacity: 0.5, marginBottom: "12px" }}>PHASE TRANSITIONS</div>
-                  <div style={{ position: "relative", height: "40px" }}>
-                    <div style={{ position: "absolute", inset: "50% 0 0", height: "4px", background: `linear-gradient(to right, #4488ff, #ffaa00, #ff4444)`, borderRadius: "2px", transform: "translateY(-50%)" }} />
-                    {["Solid", "Liquid", "Gas"].map((p, i) => (
-                      <div key={p} style={{ position: "absolute", left: `${i * 50}%`, textAlign: "center", transform: "translateX(-50%)" }}>
-                        <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: ["#4488ff","#ffaa00","#ff4444"][i], border: "2px solid white", margin: "0 auto 4px" }} />
-                        <div style={{ fontSize: "9px", opacity: 0.5 }}>{p}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", opacity: 0.6, marginTop: "8px" }}>
-                    <span>MP: {element.meltingPoint}°C</span>
-                    <span>BP: {element.boilingPoint}°C</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "16px", opacity: 0.5, textTransform: "uppercase", letterSpacing: "1px" }}>Electronic Properties</div>
-                <PropertyBar label="Ionization Energy" value={element.ionizationEnergy} max={25} unit=" eV" color="#ff6b6b" />
-                <PropertyBar label="Electron Affinity" value={element.electronAffinity} max={4} unit=" eV" color="#4d96ff" />
-                {element.electronegativity && <PropertyBar label="Electronegativity" value={element.electronegativity} max={4} unit="" color="#c77dff" />}
-
-                <div style={{ marginTop: "20px" }}>
-                  <div style={{ fontSize: "12px", opacity: 0.5, marginBottom: "10px" }}>CONDUCTIVITY & MAGNETISM</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                    {[
-                      { label: "Conductivity", value: element.conductivity, icon: "⚡" },
-                      { label: "Magnetism", value: element.magnetism, icon: "🧲" },
-                    ].map(({ label, value, icon }) => (
-                      <div key={label} style={{ padding: "12px", borderRadius: "10px", background: dark ? "#ffffff08" : "#00000005", border: `1px solid ${accent}22`, textAlign: "center" }}>
-                        <div style={{ fontSize: "20px" }}>{icon}</div>
-                        <div style={{ fontSize: "11px", fontWeight: 600, marginTop: "4px", color: accent }}>{value}</div>
-                        <div style={{ fontSize: "10px", opacity: 0.4 }}>{label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ marginTop: "16px", padding: "16px", borderRadius: "12px", background: dark ? "#ffffff06" : "#00000004", border: `1px solid ${accent}22` }}>
-                  <div style={{ fontSize: "12px", opacity: 0.5, marginBottom: "10px" }}>ALL PROPERTIES AT A GLANCE</div>
-                  {[
-                    ["Atomic Number", element.number],
-                    ["Atomic Mass", `${element.mass} u`],
-                    ["Period", element.period],
-                    ["Group", element.group],
-                    ["Valence Electrons", element.valence],
-                    ["Electron Config", element.electronConfig],
-                    ["Crystal Structure", element.crystalStructure],
-                    ["Earth Abundance", element.abundance],
-                    ["Oxidation States", element.oxidationStates],
-                  ].map(([k, v]) => (
-                    <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", padding: "5px 0", borderBottom: `1px solid ${dark ? "#ffffff06" : "#00000006"}` }}>
-                      <span style={{ opacity: 0.55 }}>{k}</span>
-                      <span style={{ fontWeight: 500 }}>{v}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "bonds" && (
-            <div>
-              <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "16px", opacity: 0.5, textTransform: "uppercase", letterSpacing: "1px" }}>Chemical Bonding</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px" }}>
-                {[
-                  { type: "Ionic Bond", strength: "150-400 kJ/mol", desc: "Transfer of electrons between atoms", possible: element.electronegativity != null && (element.electronegativity < 1.5 || element.electronegativity > 3.0), color: "#ff6b6b" },
-                  { type: "Covalent Bond", strength: "150-1100 kJ/mol", desc: "Sharing of electrons between atoms", possible: element.electronegativity != null && element.electronegativity >= 1.5 && element.electronegativity <= 3.5, color: "#4d96ff" },
-                  { type: "Metallic Bond", strength: "70-850 kJ/mol", desc: "Delocalized electrons in metal lattice", possible: ["alkali metal","alkaline earth metal","transition metal","post-transition metal"].includes(element.category), color: "#ffd93d" },
-                  { type: "Hydrogen Bond", strength: "5-30 kJ/mol", desc: "Weak electrostatic attraction to H", possible: ["N","O","F"].includes(element.symbol), color: "#c77dff" },
-                  { type: "Van der Waals", strength: "0.5-10 kJ/mol", desc: "Weak temporary dipole forces", possible: true, color: "#6bcb77" },
-                  { type: "Coordinate Bond", strength: "200-500 kJ/mol", desc: "Lone pair donation from one atom", possible: element.valence >= 1, color: "#ff9f1c" },
-                ].map(({ type, strength, desc, possible, color }) => (
-                  <div key={type} style={{
-                    padding: "16px", borderRadius: "12px",
-                    background: possible ? (dark ? color + "15" : color + "10") : (dark ? "#ffffff05" : "#00000003"),
-                    border: `1px solid ${possible ? color + "44" : (dark ? "#ffffff10" : "#00000010")}`,
-                    opacity: possible ? 1 : 0.4,
-                    transition: "all 0.3s",
-                  }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "13px", fontWeight: 600, color: possible ? color : "inherit" }}>{type}</span>
-                      {possible && <span style={{ fontSize: "9px", padding: "2px 6px", background: color + "33", color, borderRadius: "20px", fontWeight: 700 }}>FORMS</span>}
-                    </div>
-                    <div style={{ fontSize: "11px", fontWeight: 500, opacity: 0.6, marginBottom: "4px" }}>{strength}</div>
-                    <div style={{ fontSize: "11px", opacity: 0.5 }}>{desc}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: "24px", padding: "20px", borderRadius: "14px", background: dark ? "#ffffff06" : "#00000004", border: `1px solid ${accent}22` }}>
-                <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "14px", opacity: 0.5 }}>BOND STRENGTH COMPARISON</div>
-                {[
-                  { label: "Triple Bond (C≡C)", value: 835, max: 1000 },
-                  { label: "Double Bond (C=C)", value: 614, max: 1000 },
-                  { label: "Single Bond (C-C)", value: 347, max: 1000 },
-                  { label: "Ionic (NaCl)", value: 411, max: 1000 },
-                  { label: "Hydrogen (H₂O)", value: 18, max: 1000 },
-                ].map(({ label, value, max }) => (
-                  <PropertyBar key={label} label={label} value={value} max={max} unit=" kJ/mol" color={accent} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === "history" && (
-            <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-              <div style={{ display: "flex", gap: "16px", padding: "20px", borderRadius: "14px", background: dark ? "#ffffff06" : "#00000004", border: `1px solid ${accent}22`, marginBottom: "20px" }}>
-                <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: accent + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", flexShrink: 0 }}>⚗️</div>
-                <div>
-                  <div style={{ fontSize: "18px", fontWeight: 700, color: accent }}>{element.discovered < 0 ? `${Math.abs(element.discovered)} BC` : element.discovered}</div>
-                  <div style={{ fontSize: "13px", opacity: 0.5 }}>Year of Discovery</div>
-                  <div style={{ marginTop: "6px", fontSize: "14px" }}>Discovered by <strong>{element.discoveredBy}</strong></div>
-                </div>
-              </div>
-
-              <div style={{ position: "relative", paddingLeft: "24px", borderLeft: `2px solid ${accent}33` }}>
-                {[
-                  { year: element.discovered < 0 ? `${Math.abs(element.discovered)} BC` : element.discovered, event: `${element.name} first discovered by ${element.discoveredBy}` },
-                  { year: "1869", event: `Placed in Mendeleev's periodic table (Group ${element.group})` },
-                  { year: "1913", event: `Atomic number ${element.number} confirmed by Moseley's X-ray experiments` },
-                  { year: "1932", event: `Isotopes and neutron count (${element.neutrons}n) established by Chadwick's discovery` },
-                  { year: "Today", event: `Critical applications: ${element.conductivity === "excellent" ? "high-performance conductors" : element.category === "noble gas" ? "inert gas applications" : "industrial and chemical uses"}` },
-                ].map(({ year, event }) => (
-                  <div key={year} style={{ marginBottom: "20px", position: "relative" }}>
-                    <div style={{ position: "absolute", left: "-29px", width: "10px", height: "10px", borderRadius: "50%", background: accent, top: "4px" }} />
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: accent, marginBottom: "4px" }}>{year}</div>
-                    <div style={{ fontSize: "13px", opacity: 0.7 }}>{event}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: "20px", padding: "16px", borderRadius: "12px", background: accent + "11", border: `1px solid ${accent}33` }}>
-                <div style={{ fontSize: "12px", opacity: 0.5, marginBottom: "8px" }}>FUN FACT</div>
-                <div style={{ fontSize: "13px" }}>
-                  {element.symbol !== element.name.slice(0, element.symbol.length)
-                    ? `The symbol "${element.symbol}" comes from its ${element.discoveredBy.includes("Ancient") ? "ancient name" : "Latin or Greek name"}, not directly from "${element.name}".`
-                    : `The symbol "${element.symbol}" is derived directly from the element's name.`}
-                  {" "}This element has {element.shells?.length || 1} electron shell{(element.shells?.length || 1) > 1 ? "s" : ""} with a configuration of {element.electronConfig}.
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ElementCard({ element, highlight, dimmed, onClick, dark }) {
-  const catColor = CATEGORY_COLORS[element.category] || { light: "#888", dark: "#666" };
-  const color = dark ? catColor.dark : catColor.light;
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div
-      onClick={() => onClick(element)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        cursor: "pointer",
-        borderRadius: "8px",
-        padding: "4px 3px",
-        background: hovered
-          ? color + "33"
-          : highlight
-            ? color + "25"
-            : dimmed
-              ? (dark ? "#ffffff05" : "#00000005")
-              : (dark ? "#ffffff0a" : "#00000008"),
-        border: `1px solid ${highlight || hovered ? color + "88" : (dark ? "#ffffff10" : "#00000010")}`,
-        transform: hovered ? "scale(1.08) translateY(-2px)" : "scale(1)",
-        transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
-        opacity: dimmed ? 0.3 : 1,
-        display: "flex", flexDirection: "column", alignItems: "center",
-        minWidth: 0,
-        boxShadow: hovered ? `0 4px 20px ${color}44` : "none",
-        userSelect: "none",
-      }}
-    >
-      <span style={{ fontSize: "7px", opacity: 0.4, alignSelf: "flex-end", lineHeight: 1 }}>{element.number}</span>
-      <span style={{ fontSize: "clamp(10px, 1.8vw, 16px)", fontWeight: 700, color, lineHeight: 1 }}>{element.symbol}</span>
-      <span style={{ fontSize: "clamp(5px, 0.9vw, 8px)", opacity: 0.55, lineHeight: 1.2, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%" }}>{element.name}</span>
-      <span style={{ fontSize: "clamp(4px, 0.7vw, 7px)", opacity: 0.35, lineHeight: 1 }}>{element.mass.toFixed(1)}</span>
-    </div>
-  );
-}
-
-export default function App() {
-  const [dark, setDark] = useState(true);
-  const [search, setSearch] = useState("");
-  const [groupFilter, setGroupFilter] = useState("all");
-  const [selected, setSelected] = useState(null);
-  const [hoverGroup, setHoverGroup] = useState(null);
-
-  const matchesSearch = useCallback((el) => {
-    if (!search) return true;
-    const s = search.toLowerCase();
-    return (
-      el.name.toLowerCase().includes(s) ||
-      el.symbol.toLowerCase().includes(s) ||
-      String(el.number).includes(s) ||
-      el.category.toLowerCase().includes(s)
-    );
-  }, [search]);
-
-  const isHighlighted = useCallback((el) => {
-    const gMatch = groupFilter === "all" || el.category === groupFilter;
-    const sMatch = matchesSearch(el);
-    return gMatch && sMatch;
-  }, [groupFilter, matchesSearch]);
-
-  const anyFilter = search || groupFilter !== "all";
-
-  // Build grid: 18 cols × 9 rows (standard layout placeholder)
-  // We'll position elements at their xpos/ypos
-  const grid = Array.from({ length: 9 }, () => Array(18).fill(null));
-  ELEMENTS.forEach(el => {
-    if (el.ypos <= 9 && el.xpos <= 18) {
-      grid[el.ypos - 1][el.xpos - 1] = el;
-    }
-  });
-
-  const bg = dark ? "#08081a" : "#f0f0f8";
-  const text = dark ? "#e8e8ff" : "#111128";
-  const surface = dark ? "#12122a" : "#ffffff";
-  const border = dark ? "#ffffff12" : "#00000012";
-
-  return (
-    <div style={{ minHeight: "100vh", background: bg, color: text, fontFamily: "'Segoe UI', system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <style>{`
-        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-        @keyframes slideUp { from { opacity:0; transform:translateY(40px) scale(0.95) } to { opacity:1; transform:translateY(0) scale(1) } }
-        @keyframes pulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
-        * { box-sizing: border-box; margin:0; padding:0; }
-        ::-webkit-scrollbar { width:6px; height:6px; }
-        ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:rgba(128,128,200,0.3); border-radius:3px; }
-        input { outline:none; }
-      `}</style>
-
-      {/* Header */}
-      <header style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${border}`, background: surface }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
-            <div>
-              <h1 style={{ fontSize: "clamp(18px, 3vw, 28px)", fontWeight: 800, letterSpacing: "-0.5px", background: "linear-gradient(135deg, #6c63ff, #ff6b9d, #ffd93d)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                ⚛ Periodic Table
-              </h1>
-              <p style={{ fontSize: "12px", opacity: 0.4, marginTop: "2px" }}>Interactive Element Explorer · {ELEMENTS.length} Elements</p>
-            </div>
-            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-              {/* Search */}
-              <div style={{ position: "relative" }}>
-                <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", opacity: 0.4, fontSize: "14px" }}>🔍</span>
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search elements..."
-                  style={{
-                    padding: "8px 12px 8px 32px", borderRadius: "10px",
-                    border: `1px solid ${border}`,
-                    background: dark ? "#ffffff0a" : "#00000008",
-                    color: text, fontSize: "13px", width: "180px",
-                    transition: "all 0.2s",
-                  }}
-                />
-              </div>
-              {/* Dark mode toggle */}
-              <button
-                onClick={() => setDark(d => !d)}
-                style={{
-                  padding: "8px 16px", borderRadius: "10px", border: `1px solid ${border}`,
-                  background: dark ? "#ffffff15" : "#00000010", color: text,
-                  cursor: "pointer", fontSize: "13px", fontWeight: 600,
-                  transition: "all 0.2s",
-                }}
-              >
-                {dark ? "☀️ Light" : "🌙 Dark"}
-              </button>
-            </div>
-          </div>
-
-          {/* Group filter pills */}
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-            {GROUPS_FILTER.map(g => {
-              const catColor = CATEGORY_COLORS[g.id];
-              const active = groupFilter === g.id;
-              const c = catColor ? (dark ? catColor.dark : catColor.light) : (dark ? "#8888ff" : "#5555cc");
-              return (
-                <button
-                  key={g.id}
-                  onClick={() => setGroupFilter(active ? "all" : g.id)}
-                  onMouseEnter={() => setHoverGroup(g.id)}
-                  onMouseLeave={() => setHoverGroup(null)}
-                  style={{
-                    padding: "4px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: 600,
-                    cursor: "pointer", border: `1px solid ${active ? c : (dark ? "#ffffff15" : "#00000015")}`,
-                    background: active ? c + "33" : "transparent",
-                    color: active ? c : (dark ? "#aaa" : "#666"),
-                    transition: "all 0.2s",
-                    transform: active ? "scale(1.05)" : "scale(1)",
-                  }}
-                >{g.label}</button>
-              );
-            })}
-          </div>
-        </div>
-      </header>
-
-      {/* Legend */}
-      <div style={{ padding: "8px 24px", background: surface, borderBottom: `1px solid ${border}`, overflowX: "auto" }}>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center", maxWidth: "1400px", margin: "0 auto" }}>
-          <span style={{ fontSize: "10px", opacity: 0.4, whiteSpace: "nowrap" }}>LEGEND:</span>
-          {Object.entries(CATEGORY_COLORS).map(([key, val]) => (
-            <div key={key} style={{ display: "flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}>
-              <div style={{ width: "10px", height: "10px", borderRadius: "3px", background: dark ? val.dark : val.light }} />
-              <span style={{ fontSize: "10px", opacity: 0.5 }}>{val.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Table */}
-      <main style={{ flex: 1, padding: "16px 12px", overflowX: "auto" }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(18, minmax(42px, 1fr))",
-            gap: "3px",
-            minWidth: "720px",
-          }}>
-            {grid.map((row, ri) =>
-              row.map((el, ci) => {
-                const key = `${ri}-${ci}`;
-                if (!el) {
-                  // Special label cells
-                  if (ri === 5 && ci === 2) return <div key={key} style={{ gridColumn: "3/4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", opacity: 0.3, fontStyle: "italic" }}>57-71</div>;
-                  if (ri === 6 && ci === 2) return <div key={key} style={{ gridColumn: "3/4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", opacity: 0.3, fontStyle: "italic" }}>89-103</div>;
-                  return <div key={key} style={{ minHeight: "52px" }} />;
-                }
-                const high = isHighlighted(el);
-                const dim = anyFilter && !high;
-                return (
-                  <ElementCard
-                    key={el.number}
-                    element={el}
-                    highlight={high && anyFilter}
-                    dimmed={dim}
-                    onClick={setSelected}
-                    dark={dark}
-                  />
-                );
-              })
-            )}
-          </div>
-
-          {/* Stats bar */}
-          <div style={{ marginTop: "20px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {[
-              { label: "Total Elements", value: ELEMENTS.length },
-              { label: "Metals", value: ELEMENTS.filter(e => ["alkali metal","alkaline earth metal","transition metal","post-transition metal","lanthanide","actinide"].includes(e.category)).length },
-              { label: "Nonmetals", value: ELEMENTS.filter(e => ["nonmetal","noble gas","halogen"].includes(e.category)).length },
-              { label: "Metalloids", value: ELEMENTS.filter(e => e.category === "metalloid").length },
-              { label: "Radioactive", value: ELEMENTS.filter(e => e.number >= 84 || e.number === 43 || e.number === 61).length },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ padding: "12px 16px", borderRadius: "10px", background: dark ? "#ffffff08" : "#00000006", border: `1px solid ${border}`, flex: 1, minWidth: "100px", textAlign: "center" }}>
-                <div style={{ fontSize: "22px", fontWeight: 700, background: "linear-gradient(135deg,#6c63ff,#ff6b9d)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{value}</div>
-                <div style={{ fontSize: "10px", opacity: 0.4, marginTop: "2px" }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer style={{
-        width: "100%", padding: "14px 24px",
-        background: dark ? "#0a0a1e" : "#e8e8f8",
-        borderTop: `1px solid ${border}`,
-        textAlign: "center",
-      }}>
-        <span style={{ fontSize: "13px", opacity: 0.5 }}>Built by </span>
-        <span style={{ fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#6c63ff,#ff6b9d)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Joseph, Akhil</span>
-        <span style={{ fontSize: "13px", opacity: 0.3 }}> · Interactive Periodic Table · {new Date().getFullYear()}</span>
-      </footer>
-
-      {/* Modal */}
-      {selected && <ElementModal element={selected} onClose={() => setSelected(null)} dark={dark} />}
-    </div>
-  );
-}
